@@ -44,13 +44,17 @@ F-1 accounts and D-1 projects do **not** live in the database. They are read fro
 
 ## Calling the API
 
-Base URL `http://localhost:8000/api/v1`. Until F-1 publishes its token scheme, the token
-is `mock-<accountId>`:
+Use Postman, with `php artisan serve` running:
 
-```bash
-curl -H "Authorization: Bearer mock-acc-pm-0007" http://localhost:8000/api/v1/me
-curl -H "Authorization: Bearer mock-acc-pm-0007" "http://localhost:8000/api/v1/projects/PRJ-2026-014/meetings?status=DONE"
-```
+1. **Import** → `openapi.yaml` → *Postman Collection*. Every endpoint is created, with
+   `baseUrl` = `http://localhost:8000/api/v1`.
+2. Collection → **Authorization** → *Bearer Token* → `mock-acc-pm-0007`. Until F-1
+   publishes its token scheme, the token is `mock-<accountId>`. Change it to act as
+   another account from the table above.
+3. Send e.g. *GET /me* or *GET /projects/{projectId}/meetings* with `projectId` = `PRJ-2026-014`.
+
+Re-import after `openapi.yaml` changes. Endpoints of unbuilt user stories return
+`404 NOT_FOUND` until they are implemented.
 
 Responses are returned without a `data` wrapper. Every error is `{ "code", "message" }`.
 
