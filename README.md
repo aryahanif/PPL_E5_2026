@@ -65,6 +65,8 @@ CI (`.github/workflows/ci.yml`) runs both on every push and pull request.
 
 ## Adding an endpoint
 
+Follow [DESIGN.md](DESIGN.md) (house rules for code and UI; AI agents read it through
+`AGENTS.md` / `CLAUDE.md`).
 Copy the reference endpoint `GET /projects/{projectId}/meetings`:
 [MeetingController](app/Http/Controllers/Api/MeetingController.php),
 [ListMeetingsRequest](app/Http/Requests/ListMeetingsRequest.php),
