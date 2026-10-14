@@ -1,0 +1,5 @@
+extends:
+  - recommended
+rules:
+  info-license: off               # course project, no public license
+  no-server-example.com: off      # localhost is the only environment for now

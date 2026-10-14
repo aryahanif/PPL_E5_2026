@@ -1,0 +1,1067 @@
+openapi: 3.1.0
+info:
+  title: E-5 Pengawasan, Rapat, Risiko, dan Perubahan
+  version: 0.1.0
+  summary: Weekly meetings, MoM, action items, and the risk/change data feed for D-3.
+  description: |
+    API of module E-5 (class 5-E) in the PT Anaheim Nimbus Universal ERP project.
+
+    Scope of this version:
+    - Slice 1 operations (API-K05-01 to API-K05-04): meetings, MoM, MoM review,
+      action items. These are **internal**: they are called by E-5's own pages.
+    - API-K05-09 (`getProjectControlData`): raw risk, issue, and change-log data
+      for group D-3. In slice 1 it returns fixed example data so D-3 can mock
+      against it.
+    - API-K05-05 to API-K05-08 (change requests, risks/issues, indicator) are
+      added in later slices.
+
+    Conventions (proposed by E-5, not yet agreed class-wide):
+    - E-5 IDs are UUID strings. `projectId` is issued by D-1, `accountId` by F-1;
+      both are plain strings in the owner's format.
+    - Dates are `YYYY-MM-DD`; date-times are ISO 8601 in UTC. Pages show WIB (UTC+7).
+    - Enums are uppercase English.
+    - Objects and lists are returned without a `data` wrapper.
+    - Every error uses the `Error` schema: `{ code, message }`.
+
+    Authentication: Bearer token issued by F-1. Until F-1 publishes its token
+    scheme, E-5 accepts mock tokens of the form `mock-<accountId>`, for example
+    `Bearer mock-acc-pm-0007`.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development (php artisan serve)
+security:
+  - bearerAuth: []
+tags:
+  - name: Context
+    description: Current user and accessible projects (backed by F-1 and D-1 mocks).
+  - name: Meetings
+    description: API-K05-01 — weekly meetings (SOP-06).
+  - name: MoM
+    description: API-K05-02 and API-K05-03 — minutes of meeting and review (WI-05).
+  - name: Action items
+    description: API-K05-04 — follow-up of MoM action items (WI-05).
+  - name: D-3 data feed
+    description: API-K05-09 — data consumed by group D-3 for the Monthly Report.
+
+paths:
+  /me:
+    get:
+      tags: [Context]
+      operationId: getCurrentAccount
+      summary: Current account, role, and member projects
+      responses:
+        "200":
+          description: The account behind the token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /projects:
+    get:
+      tags: [Context]
+      operationId: listMyProjects
+      summary: Active projects the current account belongs to
+      description: Project data comes from D-1 (mocked in slice 1). E-5 does not store projects.
+      responses:
+        "200":
+          description: Active projects, possibly empty.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /projects/{projectId}/meetings:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+    get:
+      tags: [Meetings]
+      operationId: listProjectMeetings
+      summary: List meetings of a project
+      x-api-id: API-K05-01
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filter by meeting status.
+          schema:
+            $ref: "#/components/schemas/MeetingStatus"
+      responses:
+        "200":
+          description: Meetings ordered by `scheduledAt`, newest first. Empty array if none.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meeting"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Meetings]
+      operationId: createMeeting
+      summary: Schedule a meeting (PM only)
+      x-api-id: API-K05-01
+      description: |
+        The project must exist in D-1 and be active. At least one participant is
+        required; the same account cannot be added twice. Status starts as `SCHEDULED`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingCreate"
+            example:
+              title: Weekly Meeting Minggu 3
+              scheduledAt: "2026-10-19T02:00:00Z"
+              location: Ruang Rapat 2
+              participants:
+                - participantType: INTERNAL
+                  accountId: acc-pm-0007
+                - participantType: INTERNAL
+                  accountId: acc-tl-0042
+                - participantType: INTERNAL
+                  accountId: acc-tw-0091
+                - participantType: CLIENT
+                  displayName: Perwakilan Klien
+      responses:
+        "201":
+          description: Meeting created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /meetings/{meetingId}:
+    parameters:
+      - $ref: "#/components/parameters/MeetingId"
+    get:
+      tags: [Meetings]
+      operationId: getMeeting
+      summary: Meeting detail with participants
+      x-api-id: API-K05-01
+      responses:
+        "200":
+          description: The meeting.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /meetings/{meetingId}/status:
+    parameters:
+      - $ref: "#/components/parameters/MeetingId"
+    patch:
+      tags: [Meetings]
+      operationId: updateMeetingStatus
+      summary: Mark a meeting done or cancelled (PM only)
+      x-api-id: API-K05-01
+      description: Allowed only from `SCHEDULED`. Otherwise 409 `INVALID_STATUS_TRANSITION`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeetingStatusUpdate"
+      responses:
+        "200":
+          description: Updated meeting.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Meeting"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /meetings/{meetingId}/mom:
+    parameters:
+      - $ref: "#/components/parameters/MeetingId"
+    post:
+      tags: [MoM]
+      operationId: createMom
+      summary: Write the MoM for a finished meeting (TW only)
+      x-api-id: API-K05-02
+      description: |
+        The meeting must be `DONE` and must not already have a MoM. The MoM starts
+        as `DRAFT`. Action items are saved with the MoM but only appear in
+        action-item lists once the MoM is `FINAL`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MomInput"
+      responses:
+        "201":
+          description: MoM created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mom"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /moms/{momId}:
+    parameters:
+      - $ref: "#/components/parameters/MomId"
+    get:
+      tags: [MoM]
+      operationId: getMom
+      summary: Read a MoM with its action items
+      x-api-id: API-K05-02
+      responses:
+        "200":
+          description: The MoM.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mom"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [MoM]
+      operationId: updateMom
+      summary: Edit a MoM (TW only, while DRAFT or REVISION)
+      x-api-id: API-K05-02
+      description: |
+        Replaces the editable content, including attendance and the full list of
+        action items. A MoM in `IN_REVIEW` or `FINAL` returns 409 `MOM_NOT_EDITABLE`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MomInput"
+      responses:
+        "200":
+          description: Updated MoM.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mom"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /moms/{momId}/status:
+    parameters:
+      - $ref: "#/components/parameters/MomId"
+    patch:
+      tags: [MoM]
+      operationId: updateMomStatus
+      summary: Submit for review, approve, or request revision
+      x-api-id: API-K05-03
+      description: |
+        Allowed transitions:
+        - TW: `DRAFT` or `REVISION` → `IN_REVIEW`
+        - TL: `IN_REVIEW` → `FINAL`
+        - TL: `IN_REVIEW` → `REVISION` (`reviewNote` required)
+
+        Wrong role returns 403; a transition not listed returns 409
+        `INVALID_STATUS_TRANSITION`. Every change is recorded in the status history.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MomStatusUpdate"
+            examples:
+              submit:
+                summary: TW submits for review
+                value:
+                  status: IN_REVIEW
+              approve:
+                summary: TL approves
+                value:
+                  status: FINAL
+              revise:
+                summary: TL requests revision
+                value:
+                  status: REVISION
+                  reviewNote: Keputusan poin 2 belum jelas
+      responses:
+        "200":
+          description: Updated MoM.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Mom"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /action-items:
+    get:
+      tags: [Action items]
+      operationId: listActionItems
+      summary: List action items of FINAL MoMs
+      x-api-id: API-K05-04
+      description: |
+        Only action items whose MoM is `FINAL` are returned. A PM sees all items of
+        their projects; other roles see only items where they are the PIC, unless
+        `mine=true` is also set by a PM. Ordered by `dueDate`, earliest first.
+      parameters:
+        - name: projectId
+          in: query
+          required: false
+          description: Limit to one project (D-1 ID).
+          schema:
+            type: string
+          example: PRJ-2026-014
+        - name: mine
+          in: query
+          required: false
+          description: Only items where the current account is the PIC.
+          schema:
+            type: boolean
+            default: false
+        - name: overdue
+          in: query
+          required: false
+          description: Only items that are overdue (due date passed in WIB and status not DONE).
+          schema:
+            type: boolean
+            default: false
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/ActionItemStatus"
+      responses:
+        "200":
+          description: Action items, possibly empty.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActionItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /action-items/{actionItemId}/status:
+    parameters:
+      - $ref: "#/components/parameters/ActionItemId"
+    patch:
+      tags: [Action items]
+      operationId: updateActionItemStatus
+      summary: Update status of an action item (PIC only)
+      x-api-id: API-K05-04
+      description: |
+        Forward only: `TODO` → `IN_PROGRESS` → `DONE`. Only the PIC may change it;
+        anyone else gets 403. Overdue items can still be updated.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ActionItemStatusUpdate"
+      responses:
+        "200":
+          description: Updated action item.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActionItem"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /projects/{projectId}/control-data:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+    get:
+      tags: [D-3 data feed]
+      operationId: getProjectControlData
+      summary: Raw risk, issue, and change-log data of a project for a period
+      x-api-id: API-K05-09
+      description: |
+        Consumer: group D-3, which compiles the Monthly Report (WI-07, SOP-09).
+        E-5 only provides raw data; counting and compiling is done by D-3.
+
+        - Only change requests with status `APPROVED` or `REJECTED` decided in the
+          period are included.
+        - Risks/issues that were open or changed during the period are included.
+        - Internal account fields (createdBy, analyzedBy, decidedBy, reportedBy)
+          and review notes are never sent.
+        - No data in the period returns 200 with empty arrays, not an error.
+
+        Access: the D-3 service, or a PM/TL/TW of the project.
+        Slice 1 returns fixed example data.
+      parameters:
+        - name: periodStart
+          in: query
+          required: true
+          description: First day of the period, inclusive (00:00 WIB).
+          schema:
+            type: string
+            format: date
+          example: "2026-09-01"
+        - name: periodEnd
+          in: query
+          required: true
+          description: Last day of the period, inclusive (23:59 WIB). Must not be before periodStart.
+          schema:
+            type: string
+            format: date
+          example: "2026-09-30"
+      responses:
+        "200":
+          description: Raw data for the period.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ControlData"
+              examples:
+                success:
+                  $ref: "#/components/examples/ControlDataSuccess"
+        "400":
+          description: Invalid or reversed period.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: INVALID_PERIOD
+                message: periodEnd tidak boleh sebelum periodStart
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: Project not registered in D-1.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: PROJECT_NOT_FOUND
+                message: Proyek PRJ-2026-999 tidak ditemukan
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Token issued by F-1. Slice 1 accepts mock tokens `mock-<accountId>`.
+
+  parameters:
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      description: Project ID issued by D-1.
+      schema:
+        type: string
+      example: PRJ-2026-014
+    MeetingId:
+      name: meetingId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: 3f9a8b72-0c4e-4d1a-8b6f-2e3d4c5b6a07
+    MomId:
+      name: momId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: 7c1e2a90-1b3d-4f8a-9e21-5a6b7c8d9e01
+    ActionItemId:
+      name: actionItemId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: a41b7c2d-3e4f-4a5b-8c6d-7e8f9a0b1c09
+
+  responses:
+    BadRequest:
+      description: A field is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: VALIDATION_ERROR
+            message: "Kolom wajib kosong: meetingDate, decision"
+    Unauthorized:
+      description: Token missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: UNAUTHORIZED
+            message: Token tidak ada atau tidak sah
+    Forbidden:
+      description: Valid token, but the role or ownership does not allow this action.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: FORBIDDEN
+            message: Hanya TW yang dapat menulis MoM
+    NotFound:
+      description: The ID does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: MEETING_NOT_FOUND
+            message: Rapat tidak ditemukan
+    Conflict:
+      description: The action is not allowed in the current status.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            code: MOM_NOT_EDITABLE
+            message: MoM berstatus FINAL tidak dapat diubah
+
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: |
+            Machine-readable code. Used values: VALIDATION_ERROR, INVALID_PERIOD,
+            UNAUTHORIZED, FORBIDDEN, PROJECT_NOT_FOUND, MEETING_NOT_FOUND,
+            MOM_NOT_FOUND, ACTION_ITEM_NOT_FOUND, PROJECT_INACTIVE, MEETING_NOT_DONE,
+            MOM_ALREADY_EXISTS, MOM_NOT_EDITABLE, INVALID_STATUS_TRANSITION.
+          example: PROJECT_NOT_FOUND
+        message:
+          type: string
+          description: Human-readable message in Indonesian.
+          example: Proyek tidak ditemukan
+
+    Role:
+      type: string
+      enum: [PM, TL, TW]
+
+    Account:
+      type: object
+      description: Account from F-1 (mocked in slice 1).
+      required: [accountId, displayName, role, projectIds]
+      properties:
+        accountId:
+          type: string
+          example: acc-tw-0091
+        displayName:
+          type: string
+          example: Technical Writer Contoh
+        role:
+          $ref: "#/components/schemas/Role"
+        projectIds:
+          type: array
+          description: Projects this account is a member of.
+          items:
+            type: string
+          example: [PRJ-2026-014]
+
+    Project:
+      type: object
+      description: Project from D-1 (mocked in slice 1). E-5 does not store projects.
+      required: [projectId, name, active]
+      properties:
+        projectId:
+          type: string
+          example: PRJ-2026-014
+        name:
+          type: string
+          example: Proyek Contoh Sistem Informasi
+        active:
+          type: boolean
+          example: true
+
+    MeetingStatus:
+      type: string
+      enum: [SCHEDULED, DONE, CANCELLED]
+
+    ParticipantType:
+      type: string
+      enum: [INTERNAL, CLIENT]
+      description: INTERNAL = account from F-1; CLIENT = client recorded by name, no login.
+
+    ParticipantInput:
+      type: object
+      required: [participantType]
+      properties:
+        participantType:
+          $ref: "#/components/schemas/ParticipantType"
+        accountId:
+          type: string
+          description: Required when INTERNAL. Unique within one meeting.
+          example: acc-tl-0042
+        displayName:
+          type: string
+          maxLength: 150
+          description: Required when CLIENT.
+          example: Perwakilan Klien
+
+    Participant:
+      type: object
+      required: [participantId, participantType, accountId, displayName, attended]
+      properties:
+        participantId:
+          type: string
+          format: uuid
+          example: 9d2c4e61-7a1b-4c3d-a5e6-1f2a3b4c5d08
+        participantType:
+          $ref: "#/components/schemas/ParticipantType"
+        accountId:
+          type: [string, "null"]
+          description: Null for CLIENT participants.
+          example: acc-tl-0042
+        displayName:
+          type: string
+          description: For INTERNAL, resolved from F-1 when shown.
+          example: Technical Lead Contoh
+        attended:
+          type: boolean
+          description: Set by the TW in the MoM (WI-05 item 2). False until then.
+          example: true
+
+    MeetingCreate:
+      type: object
+      required: [title, scheduledAt, participants]
+      properties:
+        title:
+          type: string
+          maxLength: 150
+        scheduledAt:
+          type: string
+          format: date-time
+        location:
+          type: [string, "null"]
+          maxLength: 200
+        participants:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/ParticipantInput"
+
+    MeetingStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [DONE, CANCELLED]
+
+    Meeting:
+      type: object
+      required: [meetingId, projectId, title, scheduledAt, location, status, participants, momId, momStatus, createdAt, updatedAt]
+      properties:
+        meetingId:
+          type: string
+          format: uuid
+          example: 3f9a8b72-0c4e-4d1a-8b6f-2e3d4c5b6a07
+        projectId:
+          type: string
+          example: PRJ-2026-014
+        title:
+          type: string
+          example: Weekly Meeting Minggu 3
+        scheduledAt:
+          type: string
+          format: date-time
+          example: "2026-10-19T02:00:00Z"
+        location:
+          type: [string, "null"]
+          example: Ruang Rapat 2
+        status:
+          $ref: "#/components/schemas/MeetingStatus"
+        participants:
+          type: array
+          items:
+            $ref: "#/components/schemas/Participant"
+        momId:
+          type: [string, "null"]
+          format: uuid
+          description: Null until a MoM is written.
+        momStatus:
+          description: Null until a MoM is written.
+          oneOf:
+            - $ref: "#/components/schemas/MomStatus"
+            - type: "null"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    MomStatus:
+      type: string
+      enum: [DRAFT, IN_REVIEW, REVISION, FINAL]
+
+    ActionItemInput:
+      type: object
+      required: [description, picAccountId, dueDate]
+      properties:
+        actionItemId:
+          type: string
+          format: uuid
+          description: Send to keep an existing item when editing; omit for a new item.
+        description:
+          type: string
+          description: WI-05 item 5.
+          example: Siapkan server uji baru
+        picAccountId:
+          type: string
+          description: WI-05 item 6. A PM, TL, or TW account in the project.
+          example: acc-tl-0042
+        dueDate:
+          type: string
+          format: date
+          description: WI-05 item 7. Not earlier than meetingDate.
+          example: "2026-10-22"
+
+    MomInput:
+      type: object
+      required: [meetingDate, discussion, decision, attendance, actionItems]
+      properties:
+        meetingDate:
+          type: string
+          format: date
+          description: WI-05 item 1.
+          example: "2026-10-19"
+        discussion:
+          type: string
+          description: WI-05 item 3. Must not be empty.
+          example: Progres modul login 70%, server uji bermasalah
+        decision:
+          type: string
+          description: WI-05 item 4. Must not be empty.
+          example: Server uji dipindah ke lingkungan baru
+        changeSummary:
+          type: [string, "null"]
+          description: WI-05 item 8 (change/adjustment). Turned into a change request in slice 2.
+          example: Tenggat demo mundur 3 hari
+        attendance:
+          type: array
+          description: WI-05 item 2. IDs of participants who attended.
+          items:
+            type: string
+            format: uuid
+        actionItems:
+          type: array
+          description: WI-05 items 5-7. May be empty.
+          items:
+            $ref: "#/components/schemas/ActionItemInput"
+
+    MomStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [IN_REVIEW, FINAL, REVISION]
+        reviewNote:
+          type: [string, "null"]
+          description: Required when status is REVISION.
+
+    Mom:
+      type: object
+      required: [momId, meetingId, projectId, meetingDate, discussion, decision, changeSummary, status, writtenBy, reviewedBy, reviewNote, finalizedAt, actionItems, createdAt, updatedAt]
+      properties:
+        momId:
+          type: string
+          format: uuid
+          example: 7c1e2a90-1b3d-4f8a-9e21-5a6b7c8d9e01
+        meetingId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          example: PRJ-2026-014
+        meetingDate:
+          type: string
+          format: date
+        discussion:
+          type: string
+        decision:
+          type: string
+        changeSummary:
+          type: [string, "null"]
+        status:
+          $ref: "#/components/schemas/MomStatus"
+        writtenBy:
+          type: string
+          description: TW account (F-1).
+          example: acc-tw-0091
+        reviewedBy:
+          type: [string, "null"]
+          description: TL account (F-1). Null until reviewed.
+        reviewNote:
+          type: [string, "null"]
+          description: Latest revision note from the TL.
+        finalizedAt:
+          type: [string, "null"]
+          format: date-time
+        actionItems:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActionItem"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ActionItemStatus:
+      type: string
+      enum: [TODO, IN_PROGRESS, DONE]
+
+    ActionItemStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [IN_PROGRESS, DONE]
+
+    ActionItem:
+      type: object
+      required: [actionItemId, momId, projectId, description, picAccountId, dueDate, status, overdue, completedAt, createdAt, updatedAt]
+      properties:
+        actionItemId:
+          type: string
+          format: uuid
+          example: a41b7c2d-3e4f-4a5b-8c6d-7e8f9a0b1c09
+        momId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+          example: PRJ-2026-014
+        description:
+          type: string
+          example: Siapkan server uji baru
+        picAccountId:
+          type: string
+          example: acc-tl-0042
+        dueDate:
+          type: string
+          format: date
+          example: "2026-10-22"
+        status:
+          $ref: "#/components/schemas/ActionItemStatus"
+        overdue:
+          type: boolean
+          description: Computed, not stored. True when dueDate has passed (WIB) and status is not DONE.
+          example: false
+        completedAt:
+          type: [string, "null"]
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RiskIssueRecord:
+      type: object
+      required: [riskIssueId, type, title, description, impactLevel, status, picAccountId, createdAt, closedAt, resolutionNote]
+      properties:
+        riskIssueId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [RISK, ISSUE]
+        title:
+          type: string
+        description:
+          type: string
+        impactLevel:
+          oneOf:
+            - type: string
+              enum: [LOW, MEDIUM, HIGH]
+            - type: "null"
+        status:
+          type: string
+          enum: [OPEN, IN_PROGRESS, CLOSED]
+        picAccountId:
+          type: string
+          description: PIC account (F-1). D-3 resolves the name through F-1.
+        createdAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: [string, "null"]
+          format: date-time
+        resolutionNote:
+          type: [string, "null"]
+
+    ChangeLogRecord:
+      type: object
+      required: [changeRequestId, changeDescription, source, changeType, impact, status, decisionNote, decidedAt, baselineItemId, affectedTaskIds]
+      properties:
+        changeRequestId:
+          type: string
+          format: uuid
+        changeDescription:
+          type: string
+        source:
+          type: string
+          enum: [USER, INTERNAL]
+        changeType:
+          type: string
+          enum: [SCOPE, TIMELINE, TASK, RESOURCE]
+        impact:
+          type: string
+        status:
+          type: string
+          enum: [APPROVED, REJECTED]
+        decisionNote:
+          type: string
+        decidedAt:
+          type: string
+          format: date-time
+        baselineItemId:
+          type: [string, "null"]
+          description: Baseline ID from E-3. E-5 stores the link only.
+        affectedTaskIds:
+          type: array
+          description: Task IDs from E-4. E-5 stores the links only. May be empty.
+          items:
+            type: string
+
+    ControlData:
+      type: object
+      required: [projectId, periodStart, periodEnd, generatedAt, riskIssues, changeLog]
+      properties:
+        projectId:
+          type: string
+        periodStart:
+          type: string
+          format: date
+        periodEnd:
+          type: string
+          format: date
+        generatedAt:
+          type: string
+          format: date-time
+        riskIssues:
+          type: array
+          description: Ordered by createdAt, oldest first.
+          items:
+            $ref: "#/components/schemas/RiskIssueRecord"
+        changeLog:
+          type: array
+          description: Ordered by decidedAt, oldest first.
+          items:
+            $ref: "#/components/schemas/ChangeLogRecord"
+
+  examples:
+    ControlDataSuccess:
+      summary: Same content as examples/success.json
+      value:
+        projectId: PRJ-2026-014
+        periodStart: "2026-09-01"
+        periodEnd: "2026-09-30"
+        generatedAt: "2026-10-01T02:00:00Z"
+        riskIssues:
+          - riskIssueId: e72f8a1b-2c3d-4e5f-8a6b-9c0d1e2f3a11
+            type: ISSUE
+            title: Server uji tidak dapat diakses
+            description: Testing tidak dapat dijalankan sejak Senin
+            impactLevel: HIGH
+            status: CLOSED
+            picAccountId: acc-tl-0042
+            createdAt: "2026-09-08T09:00:00Z"
+            closedAt: "2026-09-10T07:00:00Z"
+            resolutionNote: Dipindah ke server cadangan
+        changeLog:
+          - changeRequestId: c58d9e0f-1a2b-4c3d-9e4f-5a6b7c8d9e10
+            changeDescription: Tambah fitur export Excel
+            source: USER
+            changeType: SCOPE
+            impact: Tambah 2 hari, 1 tugas baru
+            status: APPROVED
+            decisionNote: Disetujui, masuk sprint berikut
+            decidedAt: "2026-09-17T04:00:00Z"
+            baselineItemId: BSL-014-03
+            affectedTaskIds: [TSK-014-027]

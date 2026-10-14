@@ -1,0 +1,14 @@
+[
+  {
+    "projectId": "PRJ-2026-014",
+    "name": "Proyek Contoh Sistem Informasi",
+    "active": true,
+    "memberAccountIds": ["acc-pm-0007", "acc-tl-0042", "acc-tw-0091"]
+  },
+  {
+    "projectId": "PRJ-2026-015",
+    "name": "Proyek Contoh Nonaktif",
+    "active": false,
+    "memberAccountIds": ["acc-pm-0007", "acc-tw-0092"]
+  }
+]

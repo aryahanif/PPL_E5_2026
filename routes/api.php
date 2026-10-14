@@ -1,0 +1,25 @@
+<?php
+
+use App\Http\Controllers\Api\ContextController;
+use App\Http\Controllers\Api\ControlDataController;
+use App\Http\Controllers\Api\MeetingController;
+use Illuminate\Support\Facades\Route;
+
+// Prefix /api/v1 is set in bootstrap/app.php. Keep this list in sync with openapi.yaml.
+
+Route::middleware('auth:api')->group(function () {
+    // Context (F-1 / D-1 mocks)
+    Route::get('/me', [ContextController::class, 'me']);
+    Route::get('/projects', [ContextController::class, 'projects']);
+
+    // API-K05-01 Meetings: reference endpoint
+    Route::get('/projects/{projectId}/meetings', [MeetingController::class, 'index']);
+    // TODO US-1: POST /projects/{projectId}/meetings, GET /meetings/{meeting}, PATCH /meetings/{meeting}/status
+
+    // TODO US-2: POST /meetings/{meeting}/mom, GET /moms/{mom}, PUT /moms/{mom}
+    // TODO US-3: PATCH /moms/{mom}/status
+    // TODO US-4: GET /action-items, PATCH /action-items/{actionItem}/status
+
+    // API-K05-09 for D-3 (stub in slice 1)
+    Route::get('/projects/{projectId}/control-data', [ControlDataController::class, 'show']);
+});

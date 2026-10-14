@@ -1,0 +1,6 @@
+[
+  { "accountId": "acc-pm-0007", "displayName": "PM Contoh", "role": "PM" },
+  { "accountId": "acc-tl-0042", "displayName": "TL Contoh", "role": "TL" },
+  { "accountId": "acc-tw-0091", "displayName": "TW Contoh", "role": "TW" },
+  { "accountId": "acc-tw-0092", "displayName": "TW Proyek Lain", "role": "TW" }
+]
