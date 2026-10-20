@@ -280,7 +280,7 @@ Mock authentication: a middleware reads `Authorization: Bearer mock-<accountId>`
 | Kind | Values |
 |---|---|
 | Mock F-1 accounts (fixture) | `acc-pm-0007` (PM), `acc-tl-0042` (TL), `acc-tw-0091` (TW), `acc-tw-0092` (TW, not in PRJ-2026-014 — for access-denied tests) |
-| Mock D-1 projects (fixture) | `PRJ-2026-014` active, members PM/TL/TW above; `PRJ-2026-015` inactive (for rejection tests) |
+| Mock D-1 projects (fixture) | `PRJ-2026-014` active, members PM/TL/TW above; `PRJ-2026-016` active, same members, DELAYED indicator (E-3/E-4 mocks; `PRJ-2026-014` is ON_TRACK); `PRJ-2026-015` inactive (for rejection tests) |
 | Meetings | One SCHEDULED, one DONE without MoM, one DONE with a FINAL MoM |
 | Action items | On the FINAL MoM: one TODO due in the future, one IN_PROGRESS overdue, one DONE |
 

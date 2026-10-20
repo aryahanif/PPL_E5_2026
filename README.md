@@ -37,9 +37,9 @@ F-1 accounts and D-1 projects do **not** live in the database. They are read fro
 
 | Account | Role | Projects |
 |---|---|---|
-| `acc-pm-0007` | PM | PRJ-2026-014, PRJ-2026-015 (inactive) |
-| `acc-tl-0042` | TL | PRJ-2026-014 |
-| `acc-tw-0091` | TW | PRJ-2026-014 |
+| `acc-pm-0007` | PM | PRJ-2026-014, PRJ-2026-016, PRJ-2026-015 (inactive) |
+| `acc-tl-0042` | TL | PRJ-2026-014, PRJ-2026-016 |
+| `acc-tw-0091` | TW | PRJ-2026-014, PRJ-2026-016 |
 | `acc-tw-0092` | TW | PRJ-2026-015 (inactive) |
 
 ## Calling the API

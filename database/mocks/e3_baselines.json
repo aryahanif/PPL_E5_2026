@@ -1,0 +1,21 @@
+{
+  "items": [
+    { "baselineItemId": "BSL-014-01", "projectId": "PRJ-2026-014", "name": "Modul autentikasi", "type": "SCOPE" },
+    { "baselineItemId": "BSL-014-02", "projectId": "PRJ-2026-014", "name": "Modul laporan", "type": "SCOPE" },
+    { "baselineItemId": "BSL-014-03", "projectId": "PRJ-2026-014", "name": "Rilis tahap 1", "type": "TIMELINE" },
+    { "baselineItemId": "BSL-016-01", "projectId": "PRJ-2026-016", "name": "Modul inventaris", "type": "SCOPE" },
+    { "baselineItemId": "BSL-016-02", "projectId": "PRJ-2026-016", "name": "Rilis tahap 1", "type": "TIMELINE" }
+  ],
+  "targets": {
+    "PRJ-2026-014": [
+      { "date": "2026-08-01", "progress": 10 },
+      { "date": "2026-09-01", "progress": 30 },
+      { "date": "2026-09-15", "progress": 45 }
+    ],
+    "PRJ-2026-016": [
+      { "date": "2026-08-01", "progress": 20 },
+      { "date": "2026-09-01", "progress": 50 },
+      { "date": "2026-09-15", "progress": 60 }
+    ]
+  }
+}
