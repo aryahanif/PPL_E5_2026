@@ -6,6 +6,7 @@ use App\Enums\ActionItemStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /** ENT-K05-04 */
 class ActionItem extends Model
@@ -28,5 +29,17 @@ class ActionItem extends Model
     public function mom(): BelongsTo
     {
         return $this->belongsTo(Mom::class);
+    }
+
+    /**
+     * Overdue is computed, never stored (PRD §5 US-4): the due date has passed
+     * in WIB and the item is not DONE.
+     */
+    public function isOverdue(): bool
+    {
+        $todayWib = Carbon::today(config('e5.display_timezone'))->toDateString();
+
+        return $this->due_date->toDateString() < $todayWib
+            && $this->status !== ActionItemStatus::DONE;
     }
 }
