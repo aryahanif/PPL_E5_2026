@@ -1,17 +1,17 @@
 # E-5 Pengawasan, Rapat, Risiko & Perubahan
 
-Module E-5 of the PT Anaheim Nimbus Universal ERP project: weekly meetings, MoM,
-action items, and the risk/change data feed for D-3. Requirements are in
-[PRD.md](PRD.md), the API contract in [openapi.yaml](openapi.yaml).
+Modul E-5 pada proyek ERP PT Anaheim Nimbus Universal: rapat mingguan, MoM,
+action item, dan data risiko/perubahan untuk D-3. Kebutuhan ada di
+[PRD.md](PRD.md), kontrak API di [openapi.yaml](openapi.yaml).
 
-**Stack:** Laravel 13, PHP 8.3+, MySQL (tests use SQLite in memory), Blade.
+**Stack:** Laravel 13, PHP 8.3+, MySQL (test memakai SQLite in-memory), Blade.
 
-## Prerequisites
+## Prasyarat
 
-- PHP 8.3 or newer with `pdo_mysql`, `pdo_sqlite`, `mbstring`, `openssl`
+- PHP 8.3 atau lebih baru dengan `pdo_mysql`, `pdo_sqlite`, `mbstring`, `openssl`
 - Composer 2
-- MySQL 8 (or MariaDB)
-- Node.js, only for linting `openapi.yaml`
+- MySQL 8 (atau MariaDB)
+- Node.js, hanya untuk lint `openapi.yaml`
 
 ## Setup
 
@@ -21,60 +21,62 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Create an empty database `e5_pengawasan` in MySQL. Then set `DB_USERNAME` and
-`DB_PASSWORD` in `.env`. Sessions and cache are stored in files, so no
-`sessions`, `cache` or `jobs` tables are needed.
+Buat database kosong `e5_pengawasan` di MySQL, lalu isi `DB_USERNAME` dan
+`DB_PASSWORD` di `.env`. Session dan cache disimpan di file, jadi tabel
+`sessions`, `cache`, dan `jobs` tidak diperlukan.
 
 ```bash
-php artisan migrate:fresh --seed   # E-5 tables + fixed fictional data (PRD §10)
+php artisan migrate:fresh --seed   # tabel E-5 + data fiktif tetap (PRD §10)
 php artisan serve                  # http://localhost:8000
 ```
 
-Open http://localhost:8000/dev-login and pick a mock account.
+Buka http://localhost:8000/dev-login dan pilih akun mock.
 
-F-1 accounts and D-1 projects do **not** live in the database. They are read from
-`database/mocks/*.json` while `INTEGRATION_MODE=mock` (see `config/e5.php`).
+Akun F-1 dan proyek D-1 **tidak** disimpan di database. Keduanya dibaca dari
+`database/mocks/*.json` selama `INTEGRATION_MODE=mock` (lihat `config/e5.php`).
+Data baseline E-3 dan tugas E-4 juga dibaca dari sana, dan proyek PRJ-2026-016
+menghasilkan indikator DELAYED sedangkan PRJ-2026-014 ON_TRACK.
 
-| Account | Role | Projects |
+| Akun | Peran | Proyek |
 |---|---|---|
-| `acc-pm-0007` | PM | PRJ-2026-014, PRJ-2026-016, PRJ-2026-015 (inactive) |
+| `acc-pm-0007` | PM | PRJ-2026-014, PRJ-2026-016, PRJ-2026-015 (nonaktif) |
 | `acc-tl-0042` | TL | PRJ-2026-014, PRJ-2026-016 |
 | `acc-tw-0091` | TW | PRJ-2026-014, PRJ-2026-016 |
-| `acc-tw-0092` | TW | PRJ-2026-015 (inactive) |
+| `acc-tw-0092` | TW | PRJ-2026-015 (nonaktif) |
 
-## Calling the API
+## Memanggil API
 
-Use Postman, with `php artisan serve` running:
+Gunakan Postman, dengan `php artisan serve` berjalan:
 
-1. **Import** → `openapi.yaml` → *Postman Collection*. Every endpoint is created, with
+1. **Import** → `openapi.yaml` → *Postman Collection*. Semua endpoint dibuat, dengan
    `baseUrl` = `http://localhost:8000/api/v1`.
-2. Collection → **Authorization** → *Bearer Token* → `mock-acc-pm-0007`. Until F-1
-   publishes its token scheme, the token is `mock-<accountId>`. Change it to act as
-   another account from the table above.
-3. Send e.g. *GET /me* or *GET /projects/{projectId}/meetings* with `projectId` = `PRJ-2026-014`.
+2. Collection → **Authorization** → *Bearer Token* → `mock-acc-pm-0007`. Sampai F-1
+   merilis skema tokennya, token berbentuk `mock-<accountId>`. Ganti untuk bertindak
+   sebagai akun lain dari tabel di atas.
+3. Kirim mis. *GET /me* atau *GET /projects/{projectId}/meetings* dengan `projectId` = `PRJ-2026-014`.
 
-Re-import after `openapi.yaml` changes. Endpoints of unbuilt user stories return
-`404 NOT_FOUND` until they are implemented.
+Import ulang setelah `openapi.yaml` berubah. Endpoint user story yang belum dibuat
+mengembalikan `404 NOT_FOUND` sampai diimplementasikan.
 
-Responses are returned without a `data` wrapper. Every error is `{ "code", "message" }`.
+Respons dikembalikan tanpa pembungkus `data`. Setiap error berbentuk `{ "code", "message" }`.
 
-## Tests and lint
+## Test dan lint
 
 ```bash
-php artisan test                      # SQLite in memory, no MySQL needed
+php artisan test                      # SQLite in-memory, tidak perlu MySQL
 npx @redocly/cli@1 lint openapi.yaml
 ```
 
-CI (`.github/workflows/ci.yml`) runs both on every push and pull request.
+CI (`.github/workflows/ci.yml`) menjalankan keduanya pada setiap push dan pull request.
 
-## Adding an endpoint
+## Menambah endpoint
 
-Follow [DESIGN.md](DESIGN.md) (house rules for code and UI; AI agents read it through
+Ikuti [DESIGN.md](DESIGN.md) (aturan kode dan UI; agen AI membacanya lewat
 `AGENTS.md` / `CLAUDE.md`).
-Copy the reference endpoint `GET /projects/{projectId}/meetings`:
+Salin endpoint acuan `GET /projects/{projectId}/meetings`:
 [MeetingController](app/Http/Controllers/Api/MeetingController.php),
 [ListMeetingsRequest](app/Http/Requests/ListMeetingsRequest.php),
 [MeetingPolicy](app/Policies/MeetingPolicy.php),
 [MeetingResource](app/Http/Resources/MeetingResource.php),
 [MeetingListTest](tests/Feature/MeetingListTest.php).
-Update `openapi.yaml` in the same pull request.
+Perbarui `openapi.yaml` dalam pull request yang sama.
