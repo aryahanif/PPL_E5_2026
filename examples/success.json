@@ -23,14 +23,30 @@
       "changeDescription": "Tambah fitur export Excel",
       "source": "USER",
       "changeType": "SCOPE",
+      "isFormalCr": true,
       "impact": "Tambah 2 hari, 1 tugas baru",
       "status": "APPROVED",
       "decisionNote": "Disetujui, masuk sprint berikut",
+      "createdAt": "2026-09-15T05:00:00Z",
       "decidedAt": "2026-09-17T04:00:00Z",
       "baselineItemId": "BSL-014-03",
       "affectedTaskIds": [
         "TSK-014-027"
       ]
+    },
+    {
+      "changeRequestId": "d69e0a1b-2c3d-4e5f-8a6b-7c8d9e0f1a20",
+      "changeDescription": "Jadwal demo internal dimajukan satu hari",
+      "source": "INTERNAL",
+      "changeType": "TIMELINE",
+      "isFormalCr": false,
+      "impact": null,
+      "status": "RECORDED",
+      "decisionNote": null,
+      "createdAt": "2026-09-22T03:00:00Z",
+      "decidedAt": null,
+      "baselineItemId": null,
+      "affectedTaskIds": []
     }
   ]
 }

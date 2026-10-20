@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: E-5 Pengawasan, Rapat, Risiko, dan Perubahan
-  version: 0.1.0
+  version: 0.2.0
   summary: Weekly meetings, MoM, action items, and the risk/change data feed for D-3.
   description: |
     API of module E-5 (class 5-E) in the PT Anaheim Nimbus Universal ERP project.
@@ -357,9 +357,9 @@ paths:
       summary: List action items of FINAL MoMs
       x-api-id: API-K05-04
       description: |
-        Only action items whose MoM is `FINAL` are returned. A PM sees all items of
-        their projects; other roles see only items where they are the PIC, unless
-        `mine=true` is also set by a PM. Ordered by `dueDate`, earliest first.
+        Only action items whose MoM is `FINAL` are returned. A PM or TL sees all items
+        of their projects; a TW sees only items where they are the PIC. `mine=true`
+        limits any role to their own items. Ordered by `dueDate`, earliest first.
       parameters:
         - name: projectId
           in: query
@@ -448,8 +448,10 @@ paths:
         Consumer: group D-3, which compiles the Monthly Report (WI-07, SOP-09).
         E-5 only provides raw data; counting and compiling is done by D-3.
 
-        - Only change requests with status `APPROVED` or `REJECTED` decided in the
-          period are included.
+        - The change log contains every entry recorded or decided in the period:
+          non-formal adjustments (`RECORDED`) and formal change requests that were
+          `APPROVED` or `REJECTED`. Formal CRs still in `PENDING_ANALYSIS` or
+          `ANALYZED` are not sent.
         - Risks/issues that were open or changed during the period are included.
         - Internal account fields (createdBy, analyzedBy, decidedBy, reportedBy)
           and review notes are never sent.
@@ -977,7 +979,7 @@ components:
 
     ChangeLogRecord:
       type: object
-      required: [changeRequestId, changeDescription, source, changeType, impact, status, decisionNote, decidedAt, baselineItemId, affectedTaskIds]
+      required: [changeRequestId, changeDescription, source, changeType, isFormalCr, impact, status, decisionNote, createdAt, decidedAt, baselineItemId, affectedTaskIds]
       properties:
         changeRequestId:
           type: string
@@ -990,16 +992,27 @@ components:
         changeType:
           type: string
           enum: [SCOPE, TIMELINE, TASK, RESOURCE]
+        isFormalCr:
+          type: boolean
+          description: False for a non-formal adjustment (status RECORDED).
         impact:
-          type: string
+          type: [string, "null"]
+          description: Filled by the TL for formal CRs. Null for RECORDED entries.
         status:
           type: string
-          enum: [APPROVED, REJECTED]
+          enum: [RECORDED, APPROVED, REJECTED]
+          description: RECORDED = non-formal adjustment, logged without approval.
         decisionNote:
-          type: string
-        decidedAt:
+          type: [string, "null"]
+          description: Null for RECORDED entries.
+        createdAt:
           type: string
           format: date-time
+          description: When the entry was recorded.
+        decidedAt:
+          type: [string, "null"]
+          format: date-time
+          description: Null for RECORDED entries.
         baselineItemId:
           type: [string, "null"]
           description: Baseline ID from E-3. E-5 stores the link only.
@@ -1031,7 +1044,7 @@ components:
             $ref: "#/components/schemas/RiskIssueRecord"
         changeLog:
           type: array
-          description: Ordered by decidedAt, oldest first.
+          description: Ordered by createdAt, oldest first.
           items:
             $ref: "#/components/schemas/ChangeLogRecord"
 
@@ -1059,9 +1072,23 @@ components:
             changeDescription: Tambah fitur export Excel
             source: USER
             changeType: SCOPE
+            isFormalCr: true
             impact: Tambah 2 hari, 1 tugas baru
             status: APPROVED
             decisionNote: Disetujui, masuk sprint berikut
+            createdAt: "2026-09-15T05:00:00Z"
             decidedAt: "2026-09-17T04:00:00Z"
             baselineItemId: BSL-014-03
             affectedTaskIds: [TSK-014-027]
+          - changeRequestId: d69e0a1b-2c3d-4e5f-8a6b-7c8d9e0f1a20
+            changeDescription: Jadwal demo internal dimajukan satu hari
+            source: INTERNAL
+            changeType: TIMELINE
+            isFormalCr: false
+            impact: null
+            status: RECORDED
+            decisionNote: null
+            createdAt: "2026-09-22T03:00:00Z"
+            decidedAt: null
+            baselineItemId: null
+            affectedTaskIds: []

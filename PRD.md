@@ -6,9 +6,11 @@
 | Client | PT Anaheim Nimbus Universal (ERP project) |
 | Team | Kelompok E-5, class 5-E |
 | Author | Arya Raihan Hanif |
-| Version | v0.2 — 2026-10-14 |
+| Version | v0.3 — 2026-10-20 |
 | Status | Draft — barebones implementation, slice 1 |
 | Stack | Laravel (decided by the team) — see §13 |
+
+**Changes in v0.3:** backlog references follow Backlog v0.2 (BL-01 to BL-13); TL can read all action items of the project (as in Backlog BL-05 and FTR-K05-02); non-formal adjustments (`RECORDED`) are part of the change log sent to D-3; §15 owners follow Backlog v0.2.
 
 **Changes in v0.2:** stack decided (Laravel, MySQL, Blade) and §13 rewritten as the technical baseline; §9 adapters described in Laravel terms; §8 states where `openapi.yaml` lives; new §15 on who sets up what; §14 adds the OpenAPI lint check.
 
@@ -57,10 +59,10 @@ PM, TL and TW can also be the **PIC** of an action item and update its status.
 
 | Slice | Backlog | Contents | Depends on |
 |---|---|---|---|
-| **1 — this PRD** | BL-01 to BL-04 | Meetings, MoM, TL review, action items | F-1, D-1 (mocked) |
-| 2 | BL-05 to BL-07 | Change requests, impact analysis, decision, change log | E-3, E-4 (mocked) |
-| 3 | BL-08, BL-09 | Risks/issues, safe/late indicator | E-3, E-4 (mocked) |
-| 4 | BL-10 | API-K05-09 for D-3; replace mocks with real F-1/D-1/E-3/E-4 | All of the above |
+| **1 — this PRD** | BL-01 to BL-05 | Meetings, MoM, TL review, action items | F-1, D-1 (mocked) |
+| 2 | BL-06 to BL-09 | Change requests (`RECORDED` adjustments and formal CRs), impact analysis, decision, change log | E-3, E-4 (mocked) |
+| 3 | BL-10 to BL-12 | Risks/issues, `ON_TRACK`/`DELAYED` indicator | E-3, E-4 (mocked) |
+| 4 | BL-13 | API-K05-09 for D-3; replace mocks with real F-1/D-1/E-3/E-4 | All of the above |
 
 Slices 2–4 get their own PRD section when slice 1 is done. Only slice 1 is specified in detail below.
 
@@ -79,7 +81,7 @@ Slices 2–4 get their own PRD section when slice 1 is done. Only slice 1 is spe
 - A new meeting has status `SCHEDULED`.
 - The PM can mark a `SCHEDULED` meeting as `DONE` or `CANCELLED`. No other transitions.
 
-### US-2 Write the MoM (BL-02, WI-05)
+### US-2 Write the MoM (BL-02, BL-03, WI-05)
 *As a TW, I write the MoM for a finished meeting, so its decisions are documented.*
 
 - Only a TW can create or edit a MoM.
@@ -95,7 +97,7 @@ Slices 2–4 get their own PRD section when slice 1 is done. Only slice 1 is spe
 - The TW can edit while the MoM is `DRAFT` or `REVISION`, then **submit for review** (`IN_REVIEW`).
 - A non-TW user who opens the MoM form gets "access denied" (FTR-K05-01).
 
-### US-3 Review the MoM (BL-03, WI-05 "MoM → TL")
+### US-3 Review the MoM (BL-04, WI-05 "MoM → TL")
 *As a TL, I approve the MoM or send it back with notes, so it is accurate before anyone acts on it.*
 
 - Only a TL can review, and only a MoM in `IN_REVIEW`.
@@ -103,12 +105,12 @@ Slices 2–4 get their own PRD section when slice 1 is done. Only slice 1 is spe
 - **Request revision** → `REVISION`. A review note is required and is shown to the TW.
 - A `FINAL` MoM cannot be edited by anyone. Corrections go into the next meeting's MoM (or a CR in slice 2).
 
-### US-4 Follow up action items (BL-04, WI-05)
+### US-4 Follow up action items (BL-05, WI-05)
 *As the PIC of an action item, I see my items and update their status, so follow-up is tracked.*
 
 - Action items appear in lists only after their MoM is `FINAL`.
 - "My action items" shows items where I am the PIC, with deadline and status.
-- The PM sees all action items of their projects (read-only for items they are not PIC of).
+- The PM and TL see all action items of their projects (read-only for items they are not PIC of). A TW sees only their own.
 - Only the PIC can change an item's status: `TODO` → `IN_PROGRESS` → `DONE` (forward only — see §12).
 - **Overdue** is calculated, not stored: deadline has passed (WIB) and status is not `DONE`. It shows as a badge next to the real status, and the item can still be updated.
 - An unknown or empty status is rejected; the item keeps its last valid status (FTR-K05-02).
@@ -142,7 +144,7 @@ Action item:  TODO ──► IN_PROGRESS ──► DONE                  (PIC on
 | Approve / request revision | | ✓ | |
 | Read MoM of own projects | ✓ | ✓ | ✓ |
 | Update action item status | own items | own items | own items |
-| Read all action items of project | ✓ | own | own |
+| Read all action items of project | ✓ | ✓ | own |
 
 "Own projects" = projects where the account is a member. Until F-1/D-1 provide membership, the mock defines it (§9).
 
@@ -371,10 +373,12 @@ The project lead builds the shared foundation once; everyone else builds feature
 | Skeleton and plumbing | Arya Raihan Hanif | Laravel project, `.env.example`, folder conventions (§13), adapters + mock fixtures (§9), mock-auth middleware, error handler, CI workflow, README, branch protection on `main` |
 | Contract | Arya Raihan Hanif | `openapi.yaml` + `examples/`, kept identical to the submitted OpenAPI document |
 | Reference endpoint | Arya Raihan Hanif | `GET /api/v1/projects/{projectId}/meetings` end to end: migration, model, seeder, policy, controller, 404/403 cases, feature tests. Every other endpoint copies this pattern |
-| US-1 Schedule a meeting (create + status) | [Nama] | Builds on the reference endpoint |
-| US-2 Write the MoM | [Nama] | Includes action items and attendance |
-| US-3 Review the MoM | [Nama] | Status service + review note |
-| US-4 Action items | [Nama] | List with filters + PIC status update |
+| US-1 Schedule a meeting (BL-01) | Arya Raihan Hanif | Builds on the reference endpoint |
+| US-2 Write the MoM (BL-02, BL-03) | Arya Raihan Hanif | Includes action items and attendance |
+| US-3 Review the MoM (BL-04) | Harits Fadhil Kurnia | Status service + review note |
+| US-4 Action items (BL-05) | I Made Surya Kartika | List with filters + PIC status update |
 
-Rules: one branch per task, a pull request into `main`, one teammate approves before merge. The lead does not build US-1 to US-4, so each member has their own commits.
+Later slices, per Backlog v0.2: BL-06 to BL-07 Iqbal Nurfikri; BL-08 to BL-09 Arya Raihan Hanif; BL-10 to BL-11 Muhammad Fabregas Garda Samudra; BL-12 Harits Fadhil Kurnia; BL-13 I Made Surya Kartika.
+
+Rules: one branch per task, a pull request into `main`, one teammate approves before merge. Each member builds their own backlog items, so every member has their own commits.
 
