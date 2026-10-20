@@ -14,7 +14,9 @@ Route::middleware('auth:api')->group(function () {
 
     // API-K05-01 Meetings: reference endpoint
     Route::get('/projects/{projectId}/meetings', [MeetingController::class, 'index']);
-    // TODO US-1: POST /projects/{projectId}/meetings, GET /meetings/{meeting}, PATCH /meetings/{meeting}/status
+    Route::post('/projects/{projectId}/meetings', [MeetingController::class, 'store']);
+    Route::get('/meetings/{meeting}', [MeetingController::class, 'show']);
+    Route::patch('/meetings/{meeting}/status', [MeetingController::class, 'updateStatus']);
 
     // TODO US-2: POST /meetings/{meeting}/mom, GET /moms/{mom}, PUT /moms/{mom}
     // TODO US-3: PATCH /moms/{mom}/status

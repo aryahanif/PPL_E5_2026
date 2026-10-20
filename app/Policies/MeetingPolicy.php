@@ -27,4 +27,18 @@ class MeetingPolicy
             ? Response::allow()
             : Response::deny('Hanya PM yang dapat menjadwalkan rapat');
     }
+
+    /** Any project member can see a meeting. */
+    public function view(Account $account, Meeting $meeting): Response
+    {
+        return Response::allow();
+    }
+
+    /** US-1: only a PM marks a meeting done or cancelled. */
+    public function updateStatus(Account $account, Meeting $meeting): Response
+    {
+        return $account->is(Role::PM)
+            ? Response::allow()
+            : Response::deny('Hanya PM yang dapat mengubah status rapat');
+    }
 }
