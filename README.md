@@ -60,6 +60,27 @@ mengembalikan `404 NOT_FOUND` sampai diimplementasikan.
 
 Respons dikembalikan tanpa pembungkus `data`. Setiap error berbentuk `{ "code", "message" }`.
 
+## Untuk D-3: API-K05-09
+
+`GET /api/v1/projects/{projectId}/control-data?periodStart=YYYY-MM-DD&periodEnd=YYYY-MM-DD`
+
+Masih **stub**: respons mengikuti `openapi.yaml`, tetapi isinya data contoh tetap
+(`examples/success.json`); hanya `projectId` dan periode yang mengikuti request. Validasi
+periode, 401, 403, dan 404 sudah berjalan nyata. Data asli menyusul di slice 4 (BL-13).
+
+Token sementara: `Bearer mock-acc-pm-0007` (token layanan D-3 dari F-1 belum ada).
+
+| Kasus | Request | Hasil |
+|---|---|---|
+| Berhasil | `PRJ-2026-014`, `periodStart=2026-09-01&periodEnd=2026-09-30` | 200 |
+| Periode terbalik | `periodStart=2026-09-30&periodEnd=2026-09-01` | 400 `INVALID_PERIOD` |
+| Tanpa token | tanpa header `Authorization` | 401 |
+| Bukan anggota | token `mock-acc-tw-0092` ke `PRJ-2026-014` | 403 |
+| Proyek tidak ada | `PRJ-2026-999` | 404 `PROJECT_NOT_FOUND` |
+
+Tanpa menjalankan Laravel: `npx @stoplight/prism-cli mock openapi.yaml -p 4010`, lalu
+panggil `http://localhost:4010/api/v1/...`.
+
 ## Test dan lint
 
 ```bash
