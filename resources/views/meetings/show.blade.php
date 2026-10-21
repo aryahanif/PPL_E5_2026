@@ -99,6 +99,18 @@
                         MoM dapat ditulis TW setelah rapat berstatus DONE.
                     @endif
                 </p>
+                @if ($meeting->mom)
+                    <div class="actions" style="margin-top:14px">
+                        <a href="/moms/{{ $meeting->mom->id }}"><x-icon name="file" size="16" /> Lihat MoM</a>
+                        <x-status-badge :value="$momStatus" />
+                    </div>
+                @elseif ($meeting->status === App\Enums\MeetingStatus::DONE)
+                    @can('create', App\Models\Mom::class)
+                        <form method="GET" action="/meetings/{{ $meeting->id }}/mom/create" style="margin-top:14px">
+                            <button type="submit" class="primary"><x-icon name="edit" size="16" /> Tulis MoM</button>
+                        </form>
+                    @endcan
+                @endif
             </div>
         </div>
 
