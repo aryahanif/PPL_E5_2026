@@ -217,8 +217,17 @@ The role check (who may make this transition) stays in the Policy and runs befor
 
 ## 8. Pages (Blade): look and feel
 
-The UI is plain and functional on purpose (PRD §11). Every page looks like
-`projects/index` and `meetings/index`.
+A modern SaaS dashboard look (Linear / Vercel style) built on the screens in
+`Rancangan_Antarmuka_E5_v0.2.pdf`: a dark navy sidebar, a sticky top bar with breadcrumb,
+a slate page background, white cards, a gradient hero per project, KPI tiles, avatars and
+coloured status pills. Plain Blade and CSS only. Copy `meetings/index`, `meetings/create`
+and `meetings/show`.
+
+The layout draws the sidebar, top bar and success toast; a page only fills `content`.
+Shared Blade components in `resources/views/components`:
+`<x-icon name="calendar" />` (inline outline icons, add new ones to its `$paths`),
+`<x-avatar :name="$name" size="32" />` (initials, colour picked from the name) and
+`<x-status-badge :value="…" />`.
 
 **Structure**
 
@@ -228,44 +237,82 @@ The UI is plain and functional on purpose (PRD §11). Every page looks like
 @section('title', 'Rapat')
 
 @section('content')
-    <p><a href="/projects">&larr; Proyek</a></p>
-    <h1>Rapat · {{ $project->name }}</h1>
+    <a class="back" href="/projects">&larr; Proyek</a>
+
+    <div class="page-head">
+        <div>
+            <h1>Rapat · {{ $project->name }}</h1>
+            <p class="muted">One-line description of the page.</p>
+        </div>
+        @can('create', App\Models\Meeting::class)
+            <form method="GET" action="…"><button class="primary">+ Jadwalkan Rapat</button></form>
+        @endcan
+    </div>
 
     @if ($items->isEmpty())
-        <p class="muted">Belum ada rapat.</p>
+        <div class="card"><p class="muted">Belum ada rapat.</p></div>
     @else
-        <table>…</table>
+        <div class="table-card"><table>…</table></div>
     @endif
 @endsection
 ```
 
-- Always extend `layouts.app`. No Vite, Tailwind, Bootstrap or JS frameworks. The
-  styles live in the `<style>` block of `resources/views/layouts/app.blade.php`.
-- Page title: short Indonesian noun (`Rapat`, `MoM`, `Action item`). `h1` repeats it,
-  with ` · <project name>` when inside a project.
-- Back link at the top for nested pages: `<p><a href="…">&larr; Parent</a></p>`.
-- Lists are `<table>` with a `<th>` header row. Empty state is `<p class="muted">…</p>`.
-- Statuses are shown as `<span class="badge">{{ $x->status->value }}</span>` (raw
-  uppercase enum). Missing values show `—`.
+- Always extend `layouts.app`. No Vite, Tailwind, Bootstrap or JS frameworks (a one-line
+  `onclick` such as a `confirm()` is fine). The styles live in the `<style>` block of
+  `resources/views/layouts/app.blade.php`; the only external asset is the Inter font.
+- A page inside a project opens with a `.hero` (project tag, `h1`, description, main
+  action) and, for lists, a `.kpis` row of `.kpi` tiles and `.tabs` for status filters.
+- Use the loop variable `$item`, not `$project`, when looping over projects: the layout
+  reads `$project` to show the current project in the sidebar.
+- Page title: short Indonesian noun (`Rapat`, `MoM`, `Action item`). It also shows in the
+  header breadcrumb. `h1` repeats it, with ` · <project name>` when inside a project.
+- Back link at the top for nested pages: `<a class="back" href="…">&larr; Parent</a>`.
+- Lists are `<table>` inside `.table-card`, with a `<th>` header row. Empty state is a
+  `.card` with `<p class="muted">…</p>`. Grouped details go in a `.card` with a numbered
+  `<h2><span class="step">01</span>…</h2>`, like the WI-05 sections in the prototype.
+- Statuses use `<x-status-badge :value="$x->status->value" />` (raw uppercase enum,
+  coloured by meaning). Add new enum values to the `match` in
+  `resources/views/components/status-badge.blade.php`. Missing values show `—`.
 - Date-time format: `d M Y H:i` in WIB, column header says `(WIB)`. Date only: `d M Y`.
-- Forms: `method="POST"` + `@csrf` (+ `@method('PATCH')` etc.). Main action
-  `<button class="primary">`, secondary actions plain `<button>`. Labels in Indonesian.
+- Forms: `method="POST"` + `@csrf` (+ `@method('PATCH')` etc.), inside a `.card`. Each input
+  sits in a `.field` with its `<label>`; required labels end with `<span class="req">*</span>`.
+  Use `.cols` for two fields side by side. Buttons go in `.card-foot`: secondary `<button>`
+  first, main action `<button class="primary">` last. Labels in Indonesian.
 - Show buttons only to roles allowed by the Policy (`@can('create', App\Models\Meeting::class)`),
   and still authorize on the server.
-- Validation errors: show `$errors` above the form in a `<p class="muted">` list.
+- Validation errors: a summary in `<div class="alert danger">` at the top of the form, and
+  for each `@error('field')` add `invalid` to the `.field` and show
+  `<div class="field-error"><x-icon name="alert" size="14" /> {{ $message }}</div>` under the input.
+- Success after a redirect: `->with('status', '…')`. The layout shows it as a `.toast`.
 
-**Design tokens** (defined in `:root` in the layout, reuse them, don't add colors):
+**Design tokens** (defined in `:root` in the layout; reuse them, don't add colours):
 
 | Token | Value | Use |
 |---|---|---|
-| `--ink` | `#1f2933` | body text |
-| `--muted` | `#616e7c` | secondary text, table headers |
-| `--line` | `#d9dee3` | borders |
-| `--accent` | `#1d4ed8` | links, primary button |
-| `--bg` | `#f7f8fa` | page background (content sits on white tables) |
+| `--ink` | `#0f172a` | body text |
+| `--muted` | `#64748b` | secondary text, table headers |
+| `--line` | `#e2e8f0` | borders |
+| `--bg` / `--surface` | `#f1f5f9` / `#ffffff` | page background / cards |
+| `--accent` / `--accent-strong` / `--accent-soft` / `--accent-ring` | `#4f46e5` / `#4338ca` / `#eef2ff` / `#c7d2fe` | links, primary button, focus ring, steps |
+| `--nav` / `--nav-2` / `--nav-ink` | `#0f172a` / `#1e293b` / `#cbd5e1` | sidebar |
+| `--info` / `--info-soft` | `#1d4ed8` / `#dbeafe` | SCHEDULED, IN_REVIEW, IN_PROGRESS |
+| `--success` / `--success-soft` | `#15803d` / `#dcfce7` | ACTIVE, DONE, FINAL |
+| `--danger` / `--danger-soft` | `#b91c1c` / `#fee2e2` | INACTIVE, CANCELLED, OVERDUE, errors, `*` |
+| `--warning` / `--warning-soft` | `#b45309` / `#fef3c7` | DRAFT, REVISION, PENDING_ANALYSIS |
+| `--radius`, `--shadow`, `--shadow-lg` | `14px`, soft shadows | cards, hero, toast |
 
-Available classes: `.badge`, `.muted`, `button.primary`. If a page truly needs a new
-class, add it to the layout's `<style>` block using these tokens, in its own PR.
+The project hero uses an indigo-to-violet gradient (`#4338ca` → `#9333ea`); avatars use the
+six colours in `components/avatar.blade.php`.
+
+Available classes: layout `.page-head`, `.back`, `.hero`, `.split` (2/3 + 1/3), `.cols`,
+`.grid`, `.stack`; cards `.card`, `.card-head`, `.card-title`, `.card-foot`, `.step`, `.count`;
+data `.kpis`, `.kpi`, `.kpi-icon` + `.tone-accent|info|success|danger|warning`, `.tabs`,
+`.table-card`, `.date-chip`, `.sub`, `.stack-avatars`, `dl.kv`, `.people`, `.timeline`,
+`.stepper`, `.badge`, `.role`, `.mono`, `.muted`; feedback `.alert` (+ `.success|danger|info`),
+`.toast`, `.empty`; forms `.field`, `.input` (input with icon), `.hint`, `.invalid`,
+`.field-error`, `.req`, `.choices`, `.choice` (+ `.tick`), `.actions`, `button.primary`,
+`button.danger`. If a page truly needs a new class, add it to the layout's `<style>` block
+using these tokens, in its own PR.
 
 ---
 
