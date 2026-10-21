@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ContextController;
 use App\Http\Controllers\Api\ControlDataController;
 use App\Http\Controllers\Api\MeetingController;
+use App\Http\Controllers\Api\MomController;
 use Illuminate\Support\Facades\Route;
 
 // Prefix /api/v1 is set in bootstrap/app.php. Keep this list in sync with openapi.yaml.
@@ -18,7 +19,11 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/meetings/{meeting}', [MeetingController::class, 'show']);
     Route::patch('/meetings/{meeting}/status', [MeetingController::class, 'updateStatus']);
 
-    // TODO US-2: POST /meetings/{meeting}/mom, GET /moms/{mom}, PUT /moms/{mom}
+    // API-K05-02 MoM write and read
+    Route::post('/meetings/{meeting}/mom', [MomController::class, 'store']);
+    Route::get('/moms/{mom}', [MomController::class, 'show']);
+    Route::put('/moms/{mom}', [MomController::class, 'update']);
+
     // TODO US-3: PATCH /moms/{mom}/status
     // TODO US-4: GET /action-items, PATCH /action-items/{actionItem}/status
 
