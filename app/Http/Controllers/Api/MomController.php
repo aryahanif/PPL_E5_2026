@@ -10,9 +10,11 @@ use App\Enums\MomStatus;
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveMomRequest;
+use App\Http\Requests\UpdateMomStatusRequest;
 use App\Http\Resources\MomResource;
 use App\Models\Meeting;
 use App\Models\Mom;
+use App\Services\MomStatusService;
 use App\Services\ProjectGuard;
 use App\Services\StatusHistoryRecorder;
 use Illuminate\Http\Request;
@@ -34,6 +36,7 @@ class MomController extends Controller
         private ProjectGuard $projects,
         private IdentityProvider $identity,
         private StatusHistoryRecorder $history,
+        private MomStatusService $statuses,
     ) {}
 
     /** POST /api/v1/meetings/{meetingId}/mom  (operationId: createMom) */
@@ -107,7 +110,18 @@ class MomController extends Controller
         return new MomResource($this->loaded($mom));
     }
 
-    // TODO API-K05-03 (Harits): updateStatus()  PATCH /moms/{mom}/status  (operationId: updateMomStatus)
+    /** PATCH /api/v1/moms/{momId}/status  (operationId: updateMomStatus) */
+    public function updateStatus(UpdateMomStatusRequest $request, Mom $mom)
+    {
+        $this->projects->forMember($mom->meeting->project_id, $request->user());
+
+        $to = MomStatus::from($request->validated('status'));
+        Gate::authorize($to === MomStatus::IN_REVIEW ? 'submit' : 'review', $mom);
+
+        $this->statuses->change($mom, $to, $request->user(), $request->validated('reviewNote'));
+
+        return new MomResource($this->loaded($mom));
+    }
 
     private function loaded(Mom $mom): Mom
     {
