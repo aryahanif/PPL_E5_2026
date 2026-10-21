@@ -251,12 +251,16 @@
                 <nav class="nav">
                     <a href="/projects" @class(['active' => request()->is('projects')])><x-icon name="folder" /> Proyek</a>
                     @if ($current)
-                        <a href="/projects/{{ $current->projectId }}/meetings" @class(['active' => ! request()->is('projects')])><x-icon name="calendar" /> Rapat</a>
+                        <a href="/projects/{{ $current->projectId }}/meetings" @class(['active' => ! request()->is('projects', 'projects/*/action-items')])><x-icon name="calendar" /> Rapat</a>
                     @else
                         <span class="soon"><x-icon name="calendar" /> Rapat <em class="chip">Pilih proyek</em></span>
                     @endif
-                    <span class="soon"><x-icon name="file" /> MoM <em class="chip">Segera</em></span>
-                    <span class="soon"><x-icon name="check-square" /> Action Items <em class="chip">Segera</em></span>
+                    <span class="soon"><x-icon name="file" /> MoM <em class="chip">Dari rapat</em></span>
+                    @if ($current)
+                        <a href="/projects/{{ $current->projectId }}/action-items" @class(['active' => request()->is('projects/*/action-items')])><x-icon name="check-square" /> Action Items</a>
+                    @else
+                        <span class="soon"><x-icon name="check-square" /> Action Items <em class="chip">Pilih proyek</em></span>
+                    @endif
                     <span class="soon"><x-icon name="change" /> Change Request <em class="chip">Slice 2</em></span>
                     <span class="soon"><x-icon name="alert" /> Risiko &amp; Isu <em class="chip">Slice 3</em></span>
                 </nav>

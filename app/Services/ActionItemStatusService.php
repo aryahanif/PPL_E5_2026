@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Data\Account;
 use App\Enums\ActionItemStatus;
+use App\Enums\MomStatus;
 use App\Exceptions\ApiException;
 use App\Models\ActionItem;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +18,22 @@ class ActionItemStatusService
     ];
 
     public function __construct(private StatusHistoryRecorder $history) {}
+
+    /** The only status the item may move to, or null when it is DONE. */
+    public function next(ActionItemStatus $from): ?ActionItemStatus
+    {
+        $to = self::ALLOWED[$from->value][0] ?? null;
+
+        return $to ? ActionItemStatus::from($to) : null;
+    }
+
+    /** Items only exist for the team once their MoM is FINAL. */
+    public function assertMomFinal(ActionItem $item): void
+    {
+        if ($item->mom->status !== MomStatus::FINAL) {
+            throw new ApiException(409, 'INVALID_STATUS_TRANSITION', 'Action item hanya dapat diubah setelah MoM berstatus FINAL');
+        }
+    }
 
     public function change(ActionItem $item, ActionItemStatus $to, Account $by): ActionItem
     {
