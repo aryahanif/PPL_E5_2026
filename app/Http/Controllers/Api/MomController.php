@@ -23,7 +23,7 @@ use Illuminate\Validation\ValidationException;
 /**
  * API-K05-02 and API-K05-03: MoM endpoints. Shared file: each owner adds only
  * their own methods below. Follow the reference endpoint
- * (Api\MeetingController::index) and DESIGN.md §4.
+ * (Api\MeetingController::index) and doc/DESIGN.md §4.
  *
  * Guard a bound MoM's project with:
  *   $this->projects->forMember($mom->meeting->project_id, $request->user());
