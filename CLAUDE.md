@@ -1,2 +1,2 @@
 @AGENTS.md
-@DESIGN.md
+@doc/DESIGN.md

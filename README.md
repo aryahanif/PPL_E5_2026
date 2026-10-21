@@ -2,7 +2,7 @@
 
 Modul E-5 pada proyek ERP PT Anaheim Nimbus Universal: rapat mingguan, MoM,
 action item, dan data risiko/perubahan untuk D-3. Kebutuhan ada di
-[PRD.md](PRD.md), kontrak API di [openapi.yaml](openapi.yaml).
+[doc/PRD.md](doc/PRD.md), kontrak API di [openapi.yaml](openapi.yaml).
 
 **Stack:** Laravel 13, PHP 8.3+, MySQL (test memakai SQLite in-memory), Blade.
 
@@ -92,7 +92,7 @@ CI (`.github/workflows/ci.yml`) menjalankan keduanya pada setiap push dan pull r
 
 ## Menambah endpoint
 
-Ikuti [DESIGN.md](DESIGN.md) (aturan kode dan UI; agen AI membacanya lewat
+Ikuti [doc/DESIGN.md](doc/DESIGN.md) (aturan kode dan UI; agen AI membacanya lewat
 `AGENTS.md` / `CLAUDE.md`).
 Salin endpoint acuan `GET /projects/{projectId}/meetings`:
 [MeetingController](app/Http/Controllers/Api/MeetingController.php),

@@ -365,7 +365,7 @@ app/Policies/             Meeting, Mom, ActionItem policies
 database/mocks/           f1_accounts.json, d1_projects.json (fake F-1/D-1 data)
 examples/                 success.json, error.json (contract examples)
 openapi.yaml
-PRD.md
+doc/PRD.md
 ```
 
 ## 14. Definition of done — slice 1
