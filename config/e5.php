@@ -15,6 +15,8 @@ return [
     'mocks' => [
         'accounts' => database_path('mocks/f1_accounts.json'),
         'projects' => database_path('mocks/d1_projects.json'),
+        'baselines' => database_path('mocks/e3_baselines.json'),
+        'tasks' => database_path('mocks/e4_tasks.json'),
     ],
 
 ];

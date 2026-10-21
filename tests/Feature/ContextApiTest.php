@@ -14,7 +14,7 @@ class ContextApiTest extends TestCase
                 'accountId' => 'acc-pm-0007',
                 'displayName' => 'PM Contoh',
                 'role' => 'PM',
-                'projectIds' => ['PRJ-2026-014'],
+                'projectIds' => ['PRJ-2026-014', 'PRJ-2026-016'],
             ]);
     }
 
@@ -30,6 +30,7 @@ class ContextApiTest extends TestCase
         $this->withToken('mock-acc-pm-0007')->getJson('/api/v1/projects')->assertOk()
             ->assertExactJson([
                 ['projectId' => 'PRJ-2026-014', 'name' => 'Proyek Contoh Sistem Informasi', 'active' => true],
+                ['projectId' => 'PRJ-2026-016', 'name' => 'Proyek Contoh Terlambat', 'active' => true],
             ]);
     }
 

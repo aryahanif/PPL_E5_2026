@@ -2,11 +2,15 @@
 
 namespace App\Providers;
 
+use App\Contracts\BaselineDirectory;
 use App\Contracts\IdentityProvider;
 use App\Contracts\ProjectDirectory;
+use App\Contracts\TaskDirectory;
 use App\Data\Account;
+use App\Integrations\Mock\MockBaselineDirectory;
 use App\Integrations\Mock\MockIdentityProvider;
 use App\Integrations\Mock\MockProjectDirectory;
+use App\Integrations\Mock\MockTaskDirectory;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -29,6 +33,20 @@ class AppServiceProvider extends ServiceProvider
             return match (config('e5.integration_mode')) {
                 'mock' => new MockProjectDirectory(config('e5.mocks.projects')),
                 default => throw new RuntimeException('INTEGRATION_MODE=live is not implemented yet (needs D-1 API).'),
+            };
+        });
+
+        $this->app->singleton(BaselineDirectory::class, function () {
+            return match (config('e5.integration_mode')) {
+                'mock' => new MockBaselineDirectory(config('e5.mocks.baselines')),
+                default => throw new RuntimeException('INTEGRATION_MODE=live is not implemented yet (needs E-3 API).'),
+            };
+        });
+
+        $this->app->singleton(TaskDirectory::class, function () {
+            return match (config('e5.integration_mode')) {
+                'mock' => new MockTaskDirectory(config('e5.mocks.tasks')),
+                default => throw new RuntimeException('INTEGRATION_MODE=live is not implemented yet (needs E-4 API).'),
             };
         });
     }
