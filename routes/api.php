@@ -24,7 +24,9 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/moms/{mom}', [MomController::class, 'show']);
     Route::put('/moms/{mom}', [MomController::class, 'update']);
 
-    // TODO US-3: PATCH /moms/{mom}/status
+    // API-K05-03 MoM review
+    Route::patch('/moms/{mom}/status', [MomController::class, 'updateStatus']);
+
     // TODO US-4: GET /action-items, PATCH /action-items/{actionItem}/status
 
     // API-K05-09 for D-3 (stub in slice 1)
