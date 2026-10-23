@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ContextController;
 use App\Http\Controllers\Api\ControlDataController;
 use App\Http\Controllers\Api\MeetingController;
 use App\Http\Controllers\Api\MomController;
+use App\Http\Controllers\Api\RiskIssueController;
 use Illuminate\Support\Facades\Route;
 
 // Prefix /api/v1 is set in bootstrap/app.php. Keep this list in sync with openapi.yaml.
@@ -31,6 +32,11 @@ Route::middleware('auth:api')->group(function () {
     // API-K05-04 Action items
     Route::get('/action-items', [ActionItemController::class, 'index']);
     Route::patch('/action-items/{actionItem}/status', [ActionItemController::class, 'updateStatus']);
+
+    // API-K05-07 Risks and issues
+    Route::get('/projects/{projectId}/risk-issues', [RiskIssueController::class, 'index']);
+    Route::post('/projects/{projectId}/risk-issues', [RiskIssueController::class, 'store']);
+    Route::patch('/risk-issues/{riskIssue}', [RiskIssueController::class, 'update']);
 
     // API-K05-09 for D-3 (stub in slice 1)
     Route::get('/projects/{projectId}/control-data', [ControlDataController::class, 'show']);
