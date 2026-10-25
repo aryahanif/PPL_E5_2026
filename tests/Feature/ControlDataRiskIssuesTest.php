@@ -48,6 +48,19 @@ class ControlDataRiskIssuesTest extends TestCase
         $this->assertSame([self::FIRST], $this->ids());
     }
 
+    public function test_non_closed_records_created_after_the_period_are_included(): void
+    {
+        $this->riskIssue(self::FIRST, RiskIssueStatus::OPEN, '2026-10-01 10:00:00', [
+            'created_at' => '2026-10-01 09:00:00',
+        ]);
+        $this->riskIssue(self::SECOND, RiskIssueStatus::IN_PROGRESS, '2026-10-02 10:00:00', [
+            'type' => RiskIssueType::ISSUE,
+            'created_at' => '2026-10-02 09:00:00',
+        ]);
+
+        $this->assertSame([self::FIRST, self::SECOND], $this->ids());
+    }
+
     public function test_closed_risks_are_filtered_by_updated_at(): void
     {
         $this->riskIssue(self::FIRST, RiskIssueStatus::CLOSED, '2026-09-15 09:00:00', [
@@ -71,6 +84,18 @@ class ControlDataRiskIssuesTest extends TestCase
 
         // The shared seed also contains OPEN and IN_PROGRESS records in PRJ-2026-014.
         $this->assertSame([self::FIRST], $this->ids());
+    }
+
+    public function test_project_parameter_is_used_for_each_query(): void
+    {
+        $otherProject = 'PRJ-2026-015';
+        $this->riskIssue(self::FIRST, RiskIssueStatus::CLOSED, '2026-09-15 09:00:00');
+        $this->riskIssue(self::SECOND, RiskIssueStatus::OPEN, '2026-09-15 09:00:00', [
+            'project_id' => $otherProject,
+        ]);
+
+        $this->assertSame([self::FIRST], $this->ids(self::PROJECT));
+        $this->assertSame([self::SECOND], $this->ids($otherProject));
     }
 
     public function test_results_are_ordered_by_created_at_ascending(): void
@@ -106,10 +131,10 @@ class ControlDataRiskIssuesTest extends TestCase
         $this->assertSame([], $this->ids());
     }
 
-    private function ids(): array
+    private function ids(string $projectId = self::PROJECT): array
     {
         return app(ControlDataService::class)->riskIssuesForPeriod(
-            self::PROJECT,
+            $projectId,
             CarbonImmutable::parse(self::START, 'UTC'),
             CarbonImmutable::parse(self::END, 'UTC'),
         )->modelKeys();
