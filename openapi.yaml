@@ -13,8 +13,8 @@ info:
       for group D-3. In slice 1 it returns fixed example data so D-3 can mock
       against it.
     - Slice 3 operation API-K05-07: project risks and issues (internal).
-    - API-K05-05, API-K05-06 and API-K05-08 (change requests, indicator) are
-      added in later slices.
+    - Slice 3 operation API-K05-08: project safe/late indicator (read-only, PM only).
+    - API-K05-05 and API-K05-06 (change requests) are added in a later slice.
 
     Conventions (proposed by E-5, not yet agreed class-wide):
     - E-5 IDs are UUID strings. `projectId` is issued by D-1, `accountId` by F-1;
@@ -43,6 +43,8 @@ tags:
     description: API-K05-04 — follow-up of MoM action items (WI-05).
   - name: Risks and issues
     description: API-K05-07 — project risk and issue register (Level 1 Pengendalian).
+  - name: Project indicator
+    description: API-K05-08 — ON_TRACK / DELAYED indicator, calculated from E-3 targets and E-4 progress.
   - name: D-3 data feed
     description: API-K05-09 — data consumed by group D-3 for the Monthly Report.
 
@@ -595,6 +597,63 @@ paths:
               example:
                 code: INVALID_STATUS_TRANSITION
                 message: Status CLOSED tidak dapat diubah ke IN_PROGRESS
+
+  /projects/{projectId}/indicator:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+    get:
+      tags: [Project indicator]
+      operationId: getProjectIndicator
+      summary: Safe/late indicator of a project
+      x-api-id: API-K05-08
+      description: |
+        Read-only. The indicator is calculated on each request, never stored, and cannot be
+        edited: any write method on this path returns `405 METHOD_NOT_ALLOWED`.
+
+        Rule (assumption until Q-10 is answered): `DELAYED` when `actualProgress` is lower
+        than `targetProgress` by more than `tolerance` percentage points, otherwise `ON_TRACK`.
+        `targetProgress` is the cumulative E-3 target on today's date (WIB); `actualProgress`
+        is the weighted average progress of the E-4 tasks. When either is not available yet
+        (no target date reached, or no tasks), `indicator` is `null`.
+
+        Access: PM of the project only. Inactive projects can still be read.
+      responses:
+        "200":
+          description: The indicator and the numbers it was calculated from.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectIndicator"
+              examples:
+                delayed:
+                  summary: Actual progress is below target
+                  value:
+                    projectId: PRJ-2026-016
+                    indicator: DELAYED
+                    targetProgress: 60.0
+                    actualProgress: 40.0
+                    tolerance: 0.0
+                    asOf: "2026-10-25"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Not a member of the project, or the role is not PM.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: FORBIDDEN
+                message: Indikator proyek hanya dapat diakses oleh PM
+        "404":
+          description: Project not registered in D-1.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: PROJECT_NOT_FOUND
+                message: Proyek PRJ-2026-999 tidak ditemukan
 
   /projects/{projectId}/control-data:
     parameters:
@@ -1314,6 +1373,45 @@ components:
           description: Task IDs from E-4. E-5 stores the links only. May be empty.
           items:
             type: string
+
+    ProjectIndicatorValue:
+      type: string
+      enum: [ON_TRACK, DELAYED]
+
+    ProjectIndicator:
+      type: object
+      required: [projectId, indicator, targetProgress, actualProgress, tolerance, asOf]
+      properties:
+        projectId:
+          type: string
+          example: PRJ-2026-016
+        indicator:
+          description: "`null` when the target or the progress is not available yet."
+          oneOf:
+            - $ref: "#/components/schemas/ProjectIndicatorValue"
+            - type: "null"
+        targetProgress:
+          type: [number, "null"]
+          minimum: 0
+          maximum: 100
+          description: Cumulative target progress (E-3) on `asOf`, in percent.
+          example: 60.0
+        actualProgress:
+          type: [number, "null"]
+          minimum: 0
+          maximum: 100
+          description: Weighted average progress of the project's tasks (E-4), in percent.
+          example: 40.0
+        tolerance:
+          type: number
+          minimum: 0
+          description: Percentage points actual may be below target before the project is `DELAYED` (application setting).
+          example: 0.0
+        asOf:
+          type: string
+          format: date
+          description: Date (WIB) the target was read for.
+          example: "2026-10-25"
 
     ControlData:
       type: object

@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ContextController;
 use App\Http\Controllers\Api\ControlDataController;
 use App\Http\Controllers\Api\MeetingController;
 use App\Http\Controllers\Api\MomController;
+use App\Http\Controllers\Api\ProjectIndicatorController;
 use App\Http\Controllers\Api\RiskIssueController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,9 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/projects/{projectId}/risk-issues', [RiskIssueController::class, 'index']);
     Route::post('/projects/{projectId}/risk-issues', [RiskIssueController::class, 'store']);
     Route::patch('/risk-issues/{riskIssue}', [RiskIssueController::class, 'update']);
+
+    // API-K05-08 Project indicator (BL-12), read-only
+    Route::get('/projects/{projectId}/indicator', [ProjectIndicatorController::class, 'show']);
 
     // API-K05-09 for D-3 (stub in slice 1)
     Route::get('/projects/{projectId}/control-data', [ControlDataController::class, 'show']);

@@ -50,6 +50,20 @@
                         <strong style="color:var(--ink)">{{ $next ? $next->scheduled_at->timezone(config('e5.display_timezone'))->locale('id')->translatedFormat('d M Y H:i').' WIB' : '—' }}</strong>
                     </div>
 
+                    @if ($reading = $indicators[$item->projectId] ?? null)
+                        <div class="sub" style="margin-top:6px"><x-icon name="layers" size="14" />
+                            Indikator:
+                            <x-status-badge :value="$reading->indicator?->value ?? '—'" />
+                            <span class="muted" style="font-size:12px">
+                                @if ($reading->indicator)
+                                    progres {{ rtrim(rtrim(number_format($reading->actualProgress, 1), '0'), '.') }}% dari target {{ rtrim(rtrim(number_format($reading->targetProgress, 1), '0'), '.') }}%
+                                @else
+                                    belum ada target atau tugas
+                                @endif
+                            </span>
+                        </div>
+                    @endif
+
                     <div class="card-foot" style="justify-content:space-between">
                         <span class="muted">{{ $team->count() }} anggota</span>
                         <a href="/projects/{{ $item->projectId }}/meetings">Buka rapat &rarr;</a>
