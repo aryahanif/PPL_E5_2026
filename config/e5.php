@@ -12,6 +12,15 @@ return [
     // Data is stored in UTC; pages show and "overdue" is calculated in this timezone.
     'display_timezone' => env('DISPLAY_TIMEZONE', 'Asia/Jakarta'),
 
+    /*
+    | BL-12 safe/late indicator. A project is DELAYED when actual progress is lower than
+    | target progress by more than `tolerance` percentage points. Q-10 (threshold) is
+    | still open with the partner, so it is configuration, not code.
+    */
+    'indicator' => [
+        'tolerance' => (float) env('INDICATOR_TOLERANCE', 0),
+    ],
+
     'mocks' => [
         'accounts' => database_path('mocks/f1_accounts.json'),
         'projects' => database_path('mocks/d1_projects.json'),
