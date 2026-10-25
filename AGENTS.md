@@ -1,10 +1,10 @@
 # Instructions for AI coding agents
 
-Before writing or changing code in this repo, read and follow **[DESIGN.md](DESIGN.md)**.
+Before writing or changing code in this repo, read and follow **[doc/DESIGN.md](doc/DESIGN.md)**.
 It defines the patterns, naming, error format, permissions, UI look, and tests every
-change must use. `openapi.yaml` and `PRD.md` are the sources of truth for behaviour.
+change must use. `openapi.yaml` and `doc/PRD.md` are the sources of truth for behaviour.
 
-Hard rules (details in DESIGN.md):
+Hard rules (details in doc/DESIGN.md):
 - Responses match `openapi.yaml` exactly: camelCase fields, no `data` wrapper,
   errors are `{ "code", "message" }`.
 - Copy the reference endpoint (`Api\MeetingController::index`) and page

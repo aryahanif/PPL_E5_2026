@@ -12,7 +12,8 @@ info:
     - API-K05-09 (`getProjectControlData`): raw risk, issue, and change-log data
       for group D-3. In slice 1 it returns fixed example data so D-3 can mock
       against it.
-    - API-K05-05 to API-K05-08 (change requests, risks/issues, indicator) are
+    - Slice 3 operation API-K05-07: project risks and issues (internal).
+    - API-K05-05, API-K05-06 and API-K05-08 (change requests, indicator) are
       added in later slices.
 
     Conventions (proposed by E-5, not yet agreed class-wide):
@@ -40,6 +41,8 @@ tags:
     description: API-K05-02 and API-K05-03 — minutes of meeting and review (WI-05).
   - name: Action items
     description: API-K05-04 — follow-up of MoM action items (WI-05).
+  - name: Risks and issues
+    description: API-K05-07 — project risk and issue register (Level 1 Pengendalian).
   - name: D-3 data feed
     description: API-K05-09 — data consumed by group D-3 for the Monthly Report.
 
@@ -436,6 +439,163 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
 
+  /projects/{projectId}/risk-issues:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+    get:
+      tags: [Risks and issues]
+      operationId: listRiskIssues
+      summary: List risks and issues of a project
+      x-api-id: API-K05-07
+      description: Any member of the project (PM, TL, TW) may read. Inactive projects can still be read.
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/RiskIssueType"
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/RiskIssueStatus"
+        - name: impactLevel
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/ImpactLevel"
+      responses:
+        "200":
+          description: Risks and issues ordered by `createdAt`, newest first. Empty array if none.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RiskIssue"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      tags: [Risks and issues]
+      operationId: createRiskIssue
+      summary: Record a risk or issue (PM only)
+      x-api-id: API-K05-07
+      description: |
+        The project must exist in D-1 and be active, otherwise 409 `PROJECT_INACTIVE`.
+        `picAccountId` must be a member of the project. `sourceMomId`, when given,
+        must be a MoM of the same project. Status starts as `OPEN`; the PM is
+        recorded as the reporter. `impactLevel` is optional until Q-08/Q-09 are answered.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RiskIssueCreate"
+            example:
+              type: ISSUE
+              title: Server uji tidak dapat diakses
+              description: Developer tidak bisa menjalankan testing sejak Senin
+              impactLevel: HIGH
+              mitigation: Pindah ke server cadangan
+              picAccountId: acc-tl-0042
+      responses:
+        "201":
+          description: Risk or issue created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskIssue"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /risk-issues/{riskIssueId}:
+    parameters:
+      - $ref: "#/components/parameters/RiskIssueId"
+    patch:
+      tags: [Risks and issues]
+      operationId: updateRiskIssue
+      summary: Update a risk or issue (PM, or TL as PIC)
+      x-api-id: API-K05-07
+      description: |
+        Only the fields sent are changed.
+        - PM: may change every field, including the PIC.
+        - TL: only `status`, `mitigation` and `resolutionNote`, and only when the TL
+          is the PIC. Any other field, or someone else's item, returns 403.
+        - TW: 403.
+
+        Allowed status transitions: `OPEN` → `IN_PROGRESS` → `CLOSED`, or `OPEN` →
+        `CLOSED` (assumption pending Q-09). Any other transition returns 409
+        `INVALID_STATUS_TRANSITION`; sending the current status is not a change.
+        `resolutionNote` is required when moving to `CLOSED` (400) and `closedAt` is
+        set automatically. Status changes and PIC changes are recorded in the status
+        history (entity type `RISK_ISSUE`).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RiskIssueUpdate"
+            examples:
+              start:
+                summary: TL starts working on the issue
+                value:
+                  status: IN_PROGRESS
+                  mitigation: Pindah ke server cadangan
+              close:
+                summary: Close with a resolution note
+                value:
+                  status: CLOSED
+                  resolutionNote: Server dipindah, testing berjalan normal
+              reassign:
+                summary: PM changes the PIC
+                value:
+                  picAccountId: acc-pm-0007
+      responses:
+        "200":
+          description: Updated risk or issue.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskIssue"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          description: The risk/issue ID does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: RISK_ISSUE_NOT_FOUND
+                message: Data tidak ditemukan
+        "409":
+          description: The status transition is not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                code: INVALID_STATUS_TRANSITION
+                message: Status CLOSED tidak dapat diubah ke IN_PROGRESS
+
   /projects/{projectId}/control-data:
     parameters:
       - $ref: "#/components/parameters/ProjectId"
@@ -549,6 +709,14 @@ components:
         type: string
         format: uuid
       example: a41b7c2d-3e4f-4a5b-8c6d-7e8f9a0b1c09
+    RiskIssueId:
+      name: riskIssueId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: e72f8a1b-2c3d-4e5f-8a6b-9c0d1e2f3a11
 
   responses:
     BadRequest:
@@ -607,7 +775,8 @@ components:
           description: |
             Machine-readable code. Used values: VALIDATION_ERROR, INVALID_PERIOD,
             UNAUTHORIZED, FORBIDDEN, PROJECT_NOT_FOUND, MEETING_NOT_FOUND,
-            MOM_NOT_FOUND, ACTION_ITEM_NOT_FOUND, PROJECT_INACTIVE, MEETING_NOT_DONE,
+            MOM_NOT_FOUND, ACTION_ITEM_NOT_FOUND, RISK_ISSUE_NOT_FOUND,
+            PROJECT_INACTIVE, MEETING_NOT_DONE,
             MOM_ALREADY_EXISTS, MOM_NOT_EDITABLE, INVALID_STATUS_TRANSITION.
           example: PROJECT_NOT_FOUND
         message:
@@ -936,6 +1105,130 @@ components:
         completedAt:
           type: [string, "null"]
           format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    RiskIssueType:
+      type: string
+      enum: [RISK, ISSUE]
+
+    RiskIssueStatus:
+      type: string
+      enum: [OPEN, IN_PROGRESS, CLOSED]
+
+    ImpactLevel:
+      type: string
+      enum: [LOW, MEDIUM, HIGH]
+
+    RiskIssueCreate:
+      type: object
+      required: [type, title, description, picAccountId]
+      properties:
+        type:
+          $ref: "#/components/schemas/RiskIssueType"
+        title:
+          type: string
+          maxLength: 150
+          example: Server uji tidak dapat diakses
+        description:
+          type: string
+          example: Developer tidak bisa menjalankan testing sejak Senin
+        impactLevel:
+          description: Optional until Q-08/Q-09 are answered.
+          oneOf:
+            - $ref: "#/components/schemas/ImpactLevel"
+            - type: "null"
+        mitigation:
+          type: [string, "null"]
+          example: Pindah ke server cadangan
+        picAccountId:
+          type: string
+          description: PIC account (F-1). Must be a member of the project.
+          example: acc-tl-0042
+        sourceMomId:
+          type: [string, "null"]
+          format: uuid
+          description: MoM the item came from. Must belong to the same project.
+
+    RiskIssueUpdate:
+      type: object
+      minProperties: 1
+      description: Send only the fields to change. A TL may only send status, mitigation and resolutionNote.
+      properties:
+        type:
+          $ref: "#/components/schemas/RiskIssueType"
+        title:
+          type: string
+          maxLength: 150
+        description:
+          type: string
+        impactLevel:
+          oneOf:
+            - $ref: "#/components/schemas/ImpactLevel"
+            - type: "null"
+        mitigation:
+          type: [string, "null"]
+        picAccountId:
+          type: string
+          description: Must be a member of the project. PM only.
+        sourceMomId:
+          type: [string, "null"]
+          format: uuid
+        status:
+          $ref: "#/components/schemas/RiskIssueStatus"
+        resolutionNote:
+          type: [string, "null"]
+          description: Required when status becomes CLOSED.
+
+    RiskIssue:
+      type: object
+      required: [riskIssueId, projectId, type, title, description, impactLevel, mitigation, status, picAccountId, sourceMomId, resolutionNote, reportedBy, closedAt, createdAt, updatedAt]
+      properties:
+        riskIssueId:
+          type: string
+          format: uuid
+          example: e72f8a1b-2c3d-4e5f-8a6b-9c0d1e2f3a11
+        projectId:
+          type: string
+          example: PRJ-2026-014
+        type:
+          $ref: "#/components/schemas/RiskIssueType"
+        title:
+          type: string
+          example: Server uji tidak dapat diakses
+        description:
+          type: string
+          example: Developer tidak bisa menjalankan testing sejak Senin
+        impactLevel:
+          oneOf:
+            - $ref: "#/components/schemas/ImpactLevel"
+            - type: "null"
+        mitigation:
+          type: [string, "null"]
+          example: Pindah ke server cadangan
+        status:
+          $ref: "#/components/schemas/RiskIssueStatus"
+        picAccountId:
+          type: string
+          description: PIC account (F-1).
+          example: acc-tl-0042
+        sourceMomId:
+          type: [string, "null"]
+          format: uuid
+        resolutionNote:
+          type: [string, "null"]
+        reportedBy:
+          type: string
+          description: PM account (F-1) that recorded the item. Internal; not sent to D-3.
+          example: acc-pm-0007
+        closedAt:
+          type: [string, "null"]
+          format: date-time
+          description: Set automatically when status becomes CLOSED.
         createdAt:
           type: string
           format: date-time

@@ -6,9 +6,11 @@
 | Client | PT Anaheim Nimbus Universal (ERP project) |
 | Team | Kelompok E-5, class 5-E |
 | Author | Arya Raihan Hanif |
-| Version | v0.3 — 2026-10-20 |
+| Version | v0.4 — 2026-10-21 |
 | Status | Draft — barebones implementation, slice 1 |
 | Stack | Laravel (decided by the team) — see §13 |
+
+**Changes in v0.4:** §12 adds integration findings from the E-3 contract review and the D-3 test setup for API-K05-09; §11 screen 7 shows the "All in project" tab to PM and TL (matches §5 and §6).
 
 **Changes in v0.3:** backlog references follow Backlog v0.2 (BL-01 to BL-13); TL can read all action items of the project (as in Backlog BL-05 and FTR-K05-02); non-formal adjustments (`RECORDED`) are part of the change log sent to D-3; §15 owners follow Backlog v0.2.
 
@@ -298,7 +300,7 @@ Plain and functional; no design work required yet.
 4. **Meeting detail** — participants; PM buttons Done/Cancel; link to MoM or "Write MoM" for TW when DONE.
 5. **MoM editor** (TW) — WI-05 fields, attendance ticks, action item rows (description, PIC, deadline), Save and Submit for review. Shows TL's review note when in REVISION.
 6. **MoM view/review** — read-only view; TL sees Approve / Request revision (note required).
-7. **Action items** — "Mine" tab for everyone, "All in project" tab for PM; status dropdown enabled only for the PIC; overdue badge.
+7. **Action items** — "Mine" tab for everyone, "All in project" tab for PM and TL; status dropdown enabled only for the PIC; overdue badge.
 
 ---
 
@@ -314,6 +316,19 @@ These are assumptions until the partner (mitra) confirms them. Record answers in
 | Can Developer/TA be a PIC? (SOP-06 vs RACI conflict) | No — PIC is PM, TL or TW |
 | Does the client log in? | No — recorded by name only |
 | Where project membership comes from (F-1 or D-1) | Mock defines it |
+
+### Integration findings (contract review, 2026-10-21)
+
+These come from reading other groups' contracts, not from the mitra. They change E-5's contract only after the owner group confirms.
+
+| Topic | Finding | Assumption used now | Owner |
+|---|---|---|---|
+| Baseline link for CRs (E-3) | E-3 API-K-E3-02 (`GET /projects/{projectId}/planning-references`, v0.3.0) returns one `baselineId` (numeric string, e.g. `"301"`) and `baselineVersion` per project: the latest `APPROVED` baseline only. There are no baseline items and no lookup by ID. | Keep `baselineItemId` until E-3 replies. Likely change: store `baselineId` + `baselineVersion` instead (affects API-K05-05 and API-K05-09, so D-3 must be told). | Fabregas (review), Iqbal |
+| Indicator targets (E-3) | E-3's API has no planned-progress or timeline data, so `ON_TRACK`/`DELAYED` cannot be computed from it. | Indicator uses mock targets (INFRA-01). If E-3 will not provide targets, compute from E-4 only, e.g. `DELAYED` when a task is past due and not done (answers Q-10). | Harits |
+| `projectId` format (D-1) | E-3 reports that D-1 (API-K01-07) issues UUID v7. The Skema Data Awal also uses UUID v7. | Contract has no pattern, so no breaking change. Examples, mocks and seed still use `PRJ-2026-014`; switch to UUID v7 once D-1 confirms. | Arya |
+| Datetime format | D-1 and E-3 send `+07:00`; E-5 and F-1 send UTC `Z`. | E-5 sends UTC and parses both. Class decision pending. | Class |
+| D-3 service token | F-1 has no service-to-service token yet. | D-3 tests API-K05-09 with a project member token (`mock-acc-pm-0007`). | Surya |
+| API-K05-09 data | Still the slice-1 stub: fixed data from `examples/success.json`; period and status filters are not applied. Period validation, 401, 403 and 404 are real. | D-3 reviews the response shape now; real data in slice 4 (BL-13), after API-K05-05/06/07. | Surya |
 
 ---
 
@@ -350,7 +365,7 @@ app/Policies/             Meeting, Mom, ActionItem policies
 database/mocks/           f1_accounts.json, d1_projects.json (fake F-1/D-1 data)
 examples/                 success.json, error.json (contract examples)
 openapi.yaml
-PRD.md
+doc/PRD.md
 ```
 
 ## 14. Definition of done — slice 1

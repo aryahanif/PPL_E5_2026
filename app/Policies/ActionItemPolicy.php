@@ -3,6 +3,7 @@
 namespace App\Policies;
 
 use App\Data\Account;
+use App\Enums\Role;
 use App\Models\ActionItem;
 use Illuminate\Auth\Access\Response;
 
@@ -13,6 +14,14 @@ use Illuminate\Auth\Access\Response;
  */
 class ActionItemPolicy
 {
+    /** PM and TL list every item of their projects; a TW only lists own items (see ActionItemLister). */
+    public function viewAll(Account $account): Response
+    {
+        return $account->is(Role::TW)
+            ? Response::deny('TW hanya dapat melihat action item miliknya')
+            : Response::allow();
+    }
+
     /** Only the PIC changes the status of an action item, PM and TL included. */
     public function updateStatus(Account $account, ActionItem $actionItem): Response
     {

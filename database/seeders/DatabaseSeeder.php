@@ -3,13 +3,17 @@
 namespace Database\Seeders;
 
 use App\Enums\ActionItemStatus;
+use App\Enums\ImpactLevel;
 use App\Enums\MeetingStatus;
 use App\Enums\MomStatus;
 use App\Enums\ParticipantType;
+use App\Enums\RiskIssueStatus;
+use App\Enums\RiskIssueType;
 use App\Models\ActionItem;
 use App\Models\Meeting;
 use App\Models\MeetingParticipant;
 use App\Models\Mom;
+use App\Models\RiskIssue;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -64,6 +68,29 @@ class DatabaseSeeder extends Seeder
                 'status' => $status,
                 'completed_at' => $status === ActionItemStatus::DONE ? $at(-6) : null,
             ]);
+        }
+
+        // 4. Risk register: one OPEN risk (PIC PM) and one IN_PROGRESS issue from the MoM above (PIC TL)
+        $risks = [
+            ['55555555-5555-4555-8555-000000000001', RiskIssueType::RISK, 'Klien terlambat memberi data uji', 'Data uji dari klien belum diterima, pengujian modul laporan bisa mundur.', ImpactLevel::MEDIUM, null, 'acc-pm-0007', null, RiskIssueStatus::OPEN, -7],
+            ['55555555-5555-4555-8555-000000000002', RiskIssueType::ISSUE, 'Server uji tidak dapat diakses', 'Developer tidak bisa menjalankan testing sejak Senin.', ImpactLevel::HIGH, 'Pindah ke server cadangan', 'acc-tl-0042', $mom->id, RiskIssueStatus::IN_PROGRESS, -3],
+        ];
+
+        foreach ($risks as [$id, $type, $title, $description, $impact, $mitigation, $pic, $momId, $status, $createdInDays]) {
+            $item = RiskIssue::updateOrCreate(['id' => $id], [
+                'project_id' => self::PROJECT,
+                'type' => $type,
+                'title' => $title,
+                'description' => $description,
+                'impact_level' => $impact,
+                'mitigation' => $mitigation,
+                'pic_account_id' => $pic,
+                'source_mom_id' => $momId,
+                'status' => $status,
+                'reported_by' => 'acc-pm-0007',
+            ]);
+
+            $item->forceFill(['created_at' => $at($createdInDays)])->save();
         }
     }
 
