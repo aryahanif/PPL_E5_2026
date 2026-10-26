@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ActionItemController;
 use App\Http\Controllers\Api\ContextController;
 use App\Http\Controllers\Api\ControlDataController;
+use App\Http\Controllers\Api\ChangeRequestController;
 use App\Http\Controllers\Api\MeetingController;
 use App\Http\Controllers\Api\MomController;
 use App\Http\Controllers\Api\ProjectIndicatorController;
@@ -33,6 +34,10 @@ Route::middleware('auth:api')->group(function () {
     // API-K05-04 Action items
     Route::get('/action-items', [ActionItemController::class, 'index']);
     Route::patch('/action-items/{actionItem}/status', [ActionItemController::class, 'updateStatus']);
+
+    // API-K05-05 and API-K05-06 Change requests
+    Route::post('/change-requests', [ChangeRequestController::class, 'store']);
+    Route::patch('/change-requests/{changeRequest}/analysis', [ChangeRequestController::class, 'analyze']);
 
     // API-K05-07 Risks and issues
     Route::get('/projects/{projectId}/risk-issues', [RiskIssueController::class, 'index']);

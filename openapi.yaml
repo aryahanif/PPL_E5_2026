@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: E-5 Pengawasan, Rapat, Risiko, dan Perubahan
-  version: 0.2.0
+  version: 0.3.0
   summary: Weekly meetings, MoM, action items, and the risk/change data feed for D-3.
   description: |
     API of module E-5 (class 5-E) in the PT Anaheim Nimbus Universal ERP project.
@@ -14,7 +14,7 @@ info:
       against it.
     - Slice 3 operation API-K05-07: project risks and issues (internal).
     - Slice 3 operation API-K05-08: project safe/late indicator (read-only, PM only).
-    - API-K05-05 and API-K05-06 (change requests) are added in a later slice.
+    - Slice 2 operations API-K05-05 and API-K05-06 record and analyze change requests.
 
     Conventions (proposed by E-5, not yet agreed class-wide):
     - E-5 IDs are UUID strings. `projectId` is issued by D-1, `accountId` by F-1;
@@ -41,6 +41,8 @@ tags:
     description: API-K05-02 and API-K05-03 — minutes of meeting and review (WI-05).
   - name: Action items
     description: API-K05-04 — follow-up of MoM action items (WI-05).
+  - name: Change requests
+    description: API-K05-05 and API-K05-06 — record and analyze changes from MoM decisions (WI-06).
   - name: Risks and issues
     description: API-K05-07 — project risk and issue register (Level 1 Pengendalian).
   - name: Project indicator
@@ -524,6 +526,81 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
 
+  /change-requests:
+    post:
+      tags: [Change requests]
+      operationId: createChangeRequest
+      summary: Record a change from a final MoM (PM or TL)
+      x-api-id: API-K05-05
+      description: |
+        The MoM must be FINAL and its project must be active. Non-formal adjustments
+        start as RECORDED; formal CRs start as PENDING_ANALYSIS.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeRequestCreate"
+            example:
+              momId: 22222222-2222-4222-8222-000000000003
+              changeDescription: Penambahan validasi login
+              source: USER
+              changeType: SCOPE
+              isFormalCr: true
+      responses:
+        "201":
+          description: Change request recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChangeRequest"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /change-requests/{changeRequestId}/analysis:
+    parameters:
+      - $ref: "#/components/parameters/ChangeRequestId"
+    patch:
+      tags: [Change requests]
+      operationId: analyzeChangeRequest
+      summary: Record impact analysis (TL only)
+      x-api-id: API-K05-06
+      description: |
+        Only PENDING_ANALYSIS formal CRs can be analyzed. SCOPE and TIMELINE changes
+        require a baseline item from the same project. Affected task IDs must belong
+        to the same project; the list may be empty.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeRequestAnalysis"
+      responses:
+        "200":
+          description: Analyzed change request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChangeRequest"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
   /risk-issues/{riskIssueId}:
     parameters:
       - $ref: "#/components/parameters/RiskIssueId"
@@ -776,6 +853,14 @@ components:
         type: string
         format: uuid
       example: e72f8a1b-2c3d-4e5f-8a6b-9c0d1e2f3a11
+    ChangeRequestId:
+      name: changeRequestId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      example: 9c765e11-6b55-42be-9a26-4dc6d4fac511
 
   responses:
     BadRequest:
@@ -835,6 +920,7 @@ components:
             Machine-readable code. Used values: VALIDATION_ERROR, INVALID_PERIOD,
             UNAUTHORIZED, FORBIDDEN, PROJECT_NOT_FOUND, MEETING_NOT_FOUND,
             MOM_NOT_FOUND, ACTION_ITEM_NOT_FOUND, RISK_ISSUE_NOT_FOUND,
+            CHANGE_REQUEST_NOT_FOUND, MOM_NOT_FINAL,
             PROJECT_INACTIVE, MEETING_NOT_DONE,
             MOM_ALREADY_EXISTS, MOM_NOT_EDITABLE, INVALID_STATUS_TRANSITION.
           example: PROJECT_NOT_FOUND
@@ -1164,6 +1250,105 @@ components:
         completedAt:
           type: [string, "null"]
           format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ChangeSource:
+      type: string
+      enum: [USER, INTERNAL]
+
+    ChangeType:
+      type: string
+      enum: [SCOPE, TIMELINE, TASK, RESOURCE]
+
+    ChangeRequestStatus:
+      type: string
+      enum: [RECORDED, PENDING_ANALYSIS, ANALYZED, APPROVED, REJECTED]
+
+    ChangeRequestCreate:
+      type: object
+      required: [momId, changeDescription, source, changeType, isFormalCr]
+      properties:
+        momId:
+          type: string
+          format: uuid
+        changeDescription:
+          type: string
+          minLength: 1
+        source:
+          $ref: "#/components/schemas/ChangeSource"
+        changeType:
+          $ref: "#/components/schemas/ChangeType"
+        isFormalCr:
+          type: boolean
+
+    ChangeRequestAnalysis:
+      type: object
+      required: [impact, affectedTaskIds]
+      properties:
+        impact:
+          type: string
+          minLength: 1
+        baselineItemId:
+          type: string
+          description: Required for SCOPE and TIMELINE; ID owned by E-3.
+        affectedTaskIds:
+          type: array
+          uniqueItems: true
+          description: E-4 task IDs from the same project. May be empty.
+          items:
+            type: string
+
+    ChangeRequest:
+      type: object
+      required: [changeRequestId, projectId, momId, changeDescription, source, changeType, isFormalCr, baselineItemId, impact, affectedTaskIds, analyzedBy, status, decisionNote, decidedBy, decidedAt, createdBy, createdAt, updatedAt]
+      properties:
+        changeRequestId:
+          type: string
+          format: uuid
+        projectId:
+          type: string
+        momId:
+          type: string
+          format: uuid
+        changeDescription:
+          type: string
+        source:
+          $ref: "#/components/schemas/ChangeSource"
+        changeType:
+          $ref: "#/components/schemas/ChangeType"
+        isFormalCr:
+          type: boolean
+        baselineItemId:
+          type: [string, "null"]
+          description: ID owned by E-3.
+        impact:
+          type: [string, "null"]
+        affectedTaskIds:
+          type: array
+          description: IDs owned by E-4.
+          items:
+            type: string
+        analyzedBy:
+          type: [string, "null"]
+          description: Internal F-1 account field; not included in API-K05-09.
+        status:
+          $ref: "#/components/schemas/ChangeRequestStatus"
+        decisionNote:
+          type: [string, "null"]
+        decidedBy:
+          type: [string, "null"]
+          description: Internal F-1 account field; not included in API-K05-09.
+        decidedAt:
+          type: [string, "null"]
+          format: date-time
+        createdBy:
+          type: string
+          description: Internal F-1 account field; not included in API-K05-09.
         createdAt:
           type: string
           format: date-time
