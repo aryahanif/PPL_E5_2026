@@ -50,6 +50,28 @@ class ChangeRequestStatusService
         });
     }
 
+    public function decide(ChangeRequest $changeRequest, ChangeRequestStatus $to, string $note, Account $by): ChangeRequest
+    {
+        $from = $changeRequest->status;
+
+        if (! in_array($to->value, self::ALLOWED[$from->value] ?? [], true)) {
+            throw new ApiException(409, 'INVALID_STATUS_TRANSITION', "Status {$from->value} tidak dapat diubah ke {$to->value}");
+        }
+
+        return DB::transaction(function () use ($changeRequest, $from, $to, $note, $by) {
+            $changeRequest->update([
+                'status' => $to,
+                'decision_note' => $note,
+                'decided_by' => $by->accountId,
+                'decided_at' => now(),
+            ]);
+
+            $this->history->record($changeRequest, $from, $to, $by, $note);
+
+            return $changeRequest->load('affectedTasks');
+        });
+    }
+
     public function analyze(ChangeRequest $changeRequest, array $data, Account $by): ChangeRequest
     {
         $from = $changeRequest->status;

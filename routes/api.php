@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\ActionItemController;
+use App\Http\Controllers\Api\ChangeLogController;
 use App\Http\Controllers\Api\ContextController;
 use App\Http\Controllers\Api\ControlDataController;
 use App\Http\Controllers\Api\ChangeRequestController;
@@ -38,6 +39,8 @@ Route::middleware('auth:api')->group(function () {
     // API-K05-05 and API-K05-06 Change requests
     Route::post('/change-requests', [ChangeRequestController::class, 'store']);
     Route::patch('/change-requests/{changeRequest}/analysis', [ChangeRequestController::class, 'analyze']);
+    Route::patch('/change-requests/{changeRequest}/decision', [ChangeRequestController::class, 'decide']);
+    Route::get('/projects/{projectId}/change-log', [ChangeLogController::class, 'index']);
 
     // API-K05-07 Risks and issues
     Route::get('/projects/{projectId}/risk-issues', [RiskIssueController::class, 'index']);
