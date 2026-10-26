@@ -601,6 +601,84 @@ paths:
         "409":
           $ref: "#/components/responses/Conflict"
 
+  /change-requests/{changeRequestId}/decision:
+    parameters:
+      - $ref: "#/components/parameters/ChangeRequestId"
+    patch:
+      tags: [Change requests]
+      operationId: decideChangeRequest
+      summary: Approve or reject an analyzed formal CR (PM or TL)
+      x-api-id: API-K05-06
+      description: |
+        Only ANALYZED change requests can be decided; any other status returns 409
+        `INVALID_STATUS_TRANSITION`. `decisionNote` is required. The decision is
+        final: APPROVED, REJECTED and RECORDED entries cannot change again (a later
+        change is a new entry). The note is also written to the status history.
+        E-5 only stores links; it never changes the E-3 baseline or E-4 tasks.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeRequestDecision"
+            example:
+              decision: APPROVED
+              decisionNote: Disetujui, jadwal baseline disesuaikan oleh PM
+      responses:
+        "200":
+          description: Decided change request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChangeRequest"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /projects/{projectId}/change-log:
+    parameters:
+      - $ref: "#/components/parameters/ProjectId"
+    get:
+      tags: [Change requests]
+      operationId: listChangeLog
+      summary: Change log of a project
+      x-api-id: API-K05-06
+      description: |
+        Any member of the project (PM, TL, TW) may read. Lists every entry of the
+        project, including RECORDED and still-in-process ones, each with its status
+        and its links (`momId`, `baselineItemId`, `affectedTaskIds`). Inactive
+        projects can still be read.
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            $ref: "#/components/schemas/ChangeRequestStatus"
+      responses:
+        "200":
+          description: Change log entries ordered by `createdAt`, newest first. Empty array if none.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChangeRequest"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
   /risk-issues/{riskIssueId}:
     parameters:
       - $ref: "#/components/parameters/RiskIssueId"
@@ -1302,6 +1380,17 @@ components:
           description: E-4 task IDs from the same project. May be empty.
           items:
             type: string
+
+    ChangeRequestDecision:
+      type: object
+      required: [decision, decisionNote]
+      properties:
+        decision:
+          type: string
+          enum: [APPROVED, REJECTED]
+        decisionNote:
+          type: string
+          minLength: 1
 
     ChangeRequest:
       type: object

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ChangeRequestStatus;
 use App\Enums\MomStatus;
 use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AnalyzeChangeRequestRequest;
 use App\Http\Requests\CreateChangeRequestRequest;
+use App\Http\Requests\DecideChangeRequestRequest;
 use App\Http\Resources\ChangeRequestResource;
 use App\Models\ChangeRequest;
 use App\Models\Mom;
@@ -47,6 +49,22 @@ class ChangeRequestController extends Controller
         Gate::authorize('analyze', $changeRequest);
 
         $changeRequest = $this->statuses->analyze($changeRequest, $request->validated(), $request->user());
+
+        return new ChangeRequestResource($changeRequest);
+    }
+
+    /** PATCH /api/v1/change-requests/{changeRequestId}/decision (operationId: decideChangeRequest) */
+    public function decide(DecideChangeRequestRequest $request, ChangeRequest $changeRequest)
+    {
+        $this->projects->forMember($changeRequest->project_id, $request->user());
+        Gate::authorize('decide', $changeRequest);
+
+        $changeRequest = $this->statuses->decide(
+            $changeRequest,
+            ChangeRequestStatus::from($request->validated('decision')),
+            $request->validated('decisionNote'),
+            $request->user(),
+        );
 
         return new ChangeRequestResource($changeRequest);
     }

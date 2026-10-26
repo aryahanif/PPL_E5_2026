@@ -21,4 +21,11 @@ class ChangeRequestPolicy
             ? Response::allow()
             : Response::deny('Hanya TL yang dapat menganalisis change request');
     }
+
+    public function decide(Account $account): Response
+    {
+        return $account->is(Role::PM) || $account->is(Role::TL)
+            ? Response::allow()
+            : Response::deny('Hanya PM atau TL yang dapat memutuskan change request');
+    }
 }
