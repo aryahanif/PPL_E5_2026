@@ -13,6 +13,15 @@ use Illuminate\Database\Eloquent\Collection;
 /** Raw project control data queries for API-K05-09. */
 class ControlDataService
 {
+    /** @return array{riskIssues: Collection<int, RiskIssue>, changeLog: Collection<int, ChangeRequest>} */
+    public function forPeriod(string $projectId, CarbonImmutable $startUtc, CarbonImmutable $endUtc): array
+    {
+        return [
+            'riskIssues' => $this->riskIssuesForPeriod($projectId, $startUtc, $endUtc),
+            'changeLog' => $this->changeLogForPeriod($projectId, $startUtc, $endUtc),
+        ];
+    }
+
     /** @return Collection<int, ChangeRequest> */
     public function changeLogForPeriod(string $projectId, CarbonImmutable $startUtc, CarbonImmutable $endUtc): Collection
     {
