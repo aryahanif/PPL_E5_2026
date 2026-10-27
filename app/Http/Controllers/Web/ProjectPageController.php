@@ -8,12 +8,14 @@ use App\Enums\MeetingStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Meeting;
 use App\Services\ProjectGuard;
+use App\Services\ProjectIndicatorCalculator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 /** Screens 2 and 3. REFERENCE PAGE: copy this pattern for other pages. */
 class ProjectPageController extends Controller
 {
-    public function index(Request $request, ProjectDirectory $projects, IdentityProvider $identity)
+    public function index(Request $request, ProjectDirectory $projects, IdentityProvider $identity, ProjectIndicatorCalculator $calculator)
     {
         $projects = $projects->activeForAccount($request->user()->accountId);
         $ids = array_map(fn ($project) => $project->projectId, $projects);
@@ -28,7 +30,12 @@ class ProjectPageController extends Controller
 
         $meetings = Meeting::query()->whereIn('project_id', $ids)->orderBy('scheduled_at')->get()->groupBy('project_id');
 
-        return view('projects.index', compact('projects', 'members', 'meetings'));
+        // BL-12: the safe/late indicator is shown to the PM only (ProjectPolicy::viewIndicator).
+        $indicators = collect($projects)
+            ->filter(fn ($project) => Gate::forUser($request->user())->allows('viewIndicator', $project))
+            ->mapWithKeys(fn ($project) => [$project->projectId => $calculator->forProject($project->projectId)]);
+
+        return view('projects.index', compact('projects', 'members', 'meetings', 'indicators'));
     }
 
     public function meetings(Request $request, ProjectGuard $guard, IdentityProvider $identity, string $projectId)
