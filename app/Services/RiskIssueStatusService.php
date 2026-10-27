@@ -21,6 +21,12 @@ class RiskIssueStatusService
 
     public function __construct(private StatusHistoryRecorder $history) {}
 
+    /** @return list<RiskIssueStatus> statuses an item may move to from $from, for the status picker on the page */
+    public function next(RiskIssueStatus $from): array
+    {
+        return array_map(fn ($to) => RiskIssueStatus::from($to), self::ALLOWED[$from->value] ?? []);
+    }
+
     /** Sending the current status is not a change. resolutionNote is required for CLOSED (UpdateRiskIssueRequest). */
     public function change(RiskIssue $item, RiskIssueStatus $to, Account $by, ?string $resolutionNote = null): RiskIssue
     {
