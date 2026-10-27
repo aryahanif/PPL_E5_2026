@@ -3,17 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ChangeLogRecordResource;
+use App\Http\Resources\RiskIssueRecordResource;
+use App\Services\ControlDataService;
 use App\Services\ProjectGuard;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 
-/**
- * API-K05-09 for group D-3. SLICE-1 STUB: returns examples/success.json with
- * the requested projectId and period, so D-3 can mock against the contract.
- * The real query (risks/issues + decided change requests) comes in slice 4.
- */
+/** API-K05-09 raw project control data for group D-3. */
 class ControlDataController extends Controller
 {
-    public function __construct(private ProjectGuard $projects) {}
+    public function __construct(
+        private ProjectGuard $projects,
+        private ControlDataService $controlData,
+    ) {}
 
     /** GET /api/v1/projects/{projectId}/control-data  (operationId: getProjectControlData) */
     public function show(Request $request, string $projectId)
@@ -30,16 +33,20 @@ class ControlDataController extends Controller
             ], 400);
         }
 
-        // TODO slice 4: allow the D-3 service token as well (OPEN-05).
         $this->projects->forMember($projectId, $request->user());
 
-        $example = json_decode(file_get_contents(base_path('examples/success.json')), true);
+        $startUtc = CarbonImmutable::createFromFormat('!Y-m-d', $request->query('periodStart'), 'Asia/Jakarta')->utc();
+        $endUtc = CarbonImmutable::createFromFormat('!Y-m-d', $request->query('periodEnd'), 'Asia/Jakarta')
+            ->setTime(23, 59, 59)->utc();
+        $records = $this->controlData->forPeriod($projectId, $startUtc, $endUtc);
 
-        return response()->json(array_merge($example, [
+        return response()->json([
             'projectId' => $projectId,
             'periodStart' => $request->query('periodStart'),
             'periodEnd' => $request->query('periodEnd'),
-            'generatedAt' => now()->toIso8601ZuluString(),
-        ]));
+            'generatedAt' => CarbonImmutable::now('UTC')->toIso8601ZuluString(),
+            'riskIssues' => RiskIssueRecordResource::collection($records['riskIssues'])->resolve($request),
+            'changeLog' => ChangeLogRecordResource::collection($records['changeLog'])->resolve($request),
+        ]);
     }
 }
