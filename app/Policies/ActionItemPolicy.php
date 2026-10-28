@@ -22,6 +22,14 @@ class ActionItemPolicy
             : Response::allow();
     }
 
+    /** The history of one item: PM and TL for every item, a TW only for own items (same reach as the list). */
+    public function view(Account $account, ActionItem $actionItem): Response
+    {
+        return ! $account->is(Role::TW) || $actionItem->pic_account_id === $account->accountId
+            ? Response::allow()
+            : Response::deny('TW hanya dapat melihat action item miliknya');
+    }
+
     /** Only the PIC changes the status of an action item, PM and TL included. */
     public function updateStatus(Account $account, ActionItem $actionItem): Response
     {
