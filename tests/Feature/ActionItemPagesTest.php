@@ -160,7 +160,133 @@ class ActionItemPagesTest extends TestCase
         $this->get($this->url('all'))->assertOk()
             ->assertDontSee('/action-items/'.self::TL_ITEM.'/status', false)
             ->assertDontSee('/action-items/'.self::TW_ITEM.'/status', false)
-            ->assertSee('Hanya PIC');
+            ->assertSee('href="/action-items/'.self::TL_ITEM.'"', false)
+            ->assertSee('href="/action-items/'.self::TW_ITEM.'"', false);
+    }
+
+    public function test_done_item_has_no_status_control_only_history_link(): void
+    {
+        $this->login('acc-pm-0007'); // PIC of the DONE item
+
+        $this->get($this->url())->assertOk()
+            ->assertDontSee('/action-items/'.self::PM_ITEM.'/status', false)
+            ->assertSee('href="/action-items/'.self::PM_ITEM.'"', false);
+    }
+
+    public function test_source_mom_shows_meeting_title_and_date_not_a_code(): void
+    {
+        $this->login('acc-tw-0091');
+
+        $item = ActionItem::with('mom.meeting')->findOrFail(self::TW_ITEM);
+
+        $this->get($this->url())->assertOk()
+            ->assertSee('href="/moms/'.$item->mom_id.'"', false)
+            ->assertSee($item->mom->meeting->title)
+            ->assertSee($item->mom->meeting_date->locale('id')->translatedFormat('d M Y'))
+            ->assertDontSee('MOM-');
+    }
+
+    // ---- Cross-project list (/action-items)
+
+    public function test_cross_project_list_shows_project_column_and_filters(): void
+    {
+        $this->login('acc-pm-0007');
+
+        $this->get('/action-items?tab=all')->assertOk()
+            ->assertSee(['Semua proyek', 'Proyek Contoh Sistem Informasi', 'Siapkan server uji baru', 'Konfirmasi jadwal demo ke klien'])
+            ->assertViewHas('total', 3);
+
+        $this->get('/action-items?tab=all&status=DONE')->assertOk()
+            ->assertSee('Konfirmasi jadwal demo ke klien')
+            ->assertDontSee('Siapkan server uji baru')
+            ->assertViewHas('total', 3);
+
+        $this->get('/action-items?tab=all&project='.self::EMPTY_PROJECT)->assertOk()
+            ->assertSee('Belum ada action item')
+            ->assertViewHas('total', 0);
+    }
+
+    public function test_kpis_count_the_active_tab_only(): void
+    {
+        $this->login('acc-tl-0042');
+
+        $this->get('/action-items')->assertOk()
+            ->assertViewHas('total', 1)
+            ->assertViewHas('counts', fn ($counts) => $counts->all() === ['TODO' => 1]);
+
+        $this->get('/action-items?tab=all')->assertOk()->assertViewHas('total', 3);
+    }
+
+    public function test_tw_cross_project_list_has_no_all_tab_and_only_own_items(): void
+    {
+        $this->login('acc-tw-0091');
+
+        $this->get('/action-items?tab=all')->assertOk()
+            ->assertDontSee('Semua di proyek')
+            ->assertSee('Perbarui dokumen kebutuhan modul login')
+            ->assertDontSee('Siapkan server uji baru');
+    }
+
+    public function test_cross_project_filter_rejects_other_projects(): void
+    {
+        $this->login('acc-tw-0092');
+
+        $this->get('/action-items?project='.self::PROJECT)->assertForbidden();
+        $this->get('/action-items?project=PRJ-0000-000')->assertNotFound();
+    }
+
+    public function test_sidebar_links_to_cross_project_list_outside_a_project(): void
+    {
+        $this->login('acc-tw-0091');
+
+        $this->get('/projects')->assertOk()->assertSee('href="/action-items"', false);
+    }
+
+    // ---- History page
+
+    public function test_pm_sees_history_of_any_item(): void
+    {
+        $this->login('acc-pm-0007');
+
+        $this->get('/action-items/'.self::TW_ITEM)->assertOk()
+            ->assertSee(['Riwayat Status', 'Perbarui dokumen kebutuhan modul login', 'Weekly Meeting Minggu 2', 'Hanya PIC yang dapat mengubah status'])
+            ->assertDontSee('Ubah ke');
+    }
+
+    public function test_pic_can_move_status_forward_from_history_page(): void
+    {
+        $this->login('acc-tl-0042');
+
+        $this->get('/action-items/'.self::TL_ITEM)->assertOk()->assertSee('Ubah ke IN_PROGRESS');
+
+        $this->from('/action-items/'.self::TL_ITEM)
+            ->patch('/action-items/'.self::TL_ITEM.'/status', ['status' => 'IN_PROGRESS'])
+            ->assertRedirect('/action-items/'.self::TL_ITEM);
+
+        $this->get('/action-items/'.self::TL_ITEM)->assertOk()->assertSee('TODO → IN_PROGRESS');
+    }
+
+    public function test_tw_cannot_see_history_of_others_items(): void
+    {
+        $this->login('acc-tw-0091');
+
+        $this->get('/action-items/'.self::TW_ITEM)->assertOk();
+        $this->get('/action-items/'.self::TL_ITEM)->assertForbidden();
+    }
+
+    public function test_history_rejects_non_member_draft_mom_and_unknown_item(): void
+    {
+        $item = $this->draftItem();
+        $this->login('acc-tw-0091');
+        $this->get("/action-items/{$item->id}")->assertStatus(409);
+        $this->get('/action-items/33333333-3333-4333-8333-999999999999')->assertNotFound();
+    }
+
+    public function test_non_member_cannot_see_history(): void
+    {
+        $this->login('acc-tw-0092');
+
+        $this->get('/action-items/'.self::TW_ITEM)->assertForbidden();
     }
 
     public function test_tw_pic_sees_form_for_own_item(): void

@@ -3,6 +3,9 @@
 namespace Database\Seeders;
 
 use App\Enums\ActionItemStatus;
+use App\Enums\ChangeRequestStatus;
+use App\Enums\ChangeSource;
+use App\Enums\ChangeType;
 use App\Enums\ImpactLevel;
 use App\Enums\MeetingStatus;
 use App\Enums\MomStatus;
@@ -10,10 +13,12 @@ use App\Enums\ParticipantType;
 use App\Enums\RiskIssueStatus;
 use App\Enums\RiskIssueType;
 use App\Models\ActionItem;
+use App\Models\ChangeRequest;
 use App\Models\Meeting;
 use App\Models\MeetingParticipant;
 use App\Models\Mom;
 use App\Models\RiskIssue;
+use App\Models\StatusHistory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
@@ -52,6 +57,35 @@ class DatabaseSeeder extends Seeder
             'reviewed_by' => 'acc-tl-0042',
             'finalized_at' => $at(-8),
         ]);
+
+        $changeRequests = [
+            ['66666666-6666-4666-8666-000000000001', 'Penyesuaian label tombol login', ChangeType::TASK, false, ChangeRequestStatus::RECORDED],
+            ['66666666-6666-4666-8666-000000000002', 'Penambahan validasi autentikasi', ChangeType::SCOPE, true, ChangeRequestStatus::PENDING_ANALYSIS],
+        ];
+
+        foreach ($changeRequests as [$id, $description, $type, $formal, $status]) {
+            $changeRequest = ChangeRequest::updateOrCreate(['id' => $id], [
+                'project_id' => self::PROJECT,
+                'mom_id' => $mom->id,
+                'change_description' => $description,
+                'source' => ChangeSource::USER,
+                'change_type' => $type,
+                'is_formal_cr' => $formal,
+                'status' => $status,
+                'created_by' => 'acc-pm-0007',
+            ]);
+
+            StatusHistory::firstOrCreate([
+                'entity_type' => ChangeRequest::HISTORY_TYPE,
+                'entity_id' => $changeRequest->id,
+                'to_status' => $status->value,
+            ], [
+                'from_status' => null,
+                'changed_by' => 'acc-pm-0007',
+                'changed_at' => $at(-8),
+                'note' => null,
+            ]);
+        }
 
         $items = [
             ['33333333-3333-4333-8333-000000000001', 'Siapkan server uji baru', 'acc-tl-0042', 3, ActionItemStatus::TODO],
