@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: E-5 Pengawasan, Rapat, Risiko, dan Perubahan
-  version: 0.3.0
+  version: 0.4.0
   summary: Weekly meetings, MoM, action items, and the risk/change data feed for D-3.
   description: |
     API of module E-5 (class 5-E) in the PT Anaheim Nimbus Universal ERP project.
@@ -9,9 +9,8 @@ info:
     Scope of this version:
     - Slice 1 operations (API-K05-01 to API-K05-04): meetings, MoM, MoM review,
       action items. These are **internal**: they are called by E-5's own pages.
-    - API-K05-09 (`getProjectControlData`): raw risk, issue, and change-log data
-      for group D-3. In slice 1 it returns fixed example data so D-3 can mock
-      against it.
+    - API-K05-09 (`getProjectControlData`): raw risk, issue, and change-log data for group D-3.
+      Data is retrieved from the E-5 database based on the requested project and reporting period.
     - Slice 3 operation API-K05-07: project risks and issues (internal).
     - Slice 3 operation API-K05-08: project safe/late indicator (read-only, PM only).
     - Slice 2 operations API-K05-05 and API-K05-06 record and analyze change requests.
@@ -820,19 +819,41 @@ paths:
       x-api-id: API-K05-09
       description: |
         Consumer: group D-3, which compiles the Monthly Report (WI-07, SOP-09).
-        E-5 only provides raw data; counting and compiling is done by D-3.
+        E-5 provides raw risk, issue, and change-log data retrieved from its
+        database. Data aggregation and report generation are handled by D-3.
 
-        - The change log contains every entry recorded or decided in the period:
-          non-formal adjustments (`RECORDED`) and formal change requests that were
-          `APPROVED` or `REJECTED`. Formal CRs still in `PENDING_ANALYSIS` or
-          `ANALYZED` are not sent.
-        - Risks/issues that were open or changed during the period are included.
-        - Internal account fields (createdBy, analyzedBy, decidedBy, reportedBy)
-          and review notes are never sent.
-        - No data in the period returns 200 with empty arrays, not an error.
+        Data selection rules:
+        - Risks and issues are included when their status is not CLOSED,
+          or their updated_at timestamp falls within the requested period.
+        - Non-formal changes with status RECORDED are included when
+          created_at falls within the requested period.
+        - Formal changes with status APPROVED or REJECTED are included
+          when decided_at falls within the requested period.
+        - Changes with status PENDING_ANALYSIS or ANALYZED are excluded.
 
-        Access: the D-3 service, or a PM/TL/TW of the project.
-        Slice 1 returns fixed example data.
+        Period handling:
+        - periodStart and periodEnd are required in YYYY-MM-DD format.
+        - The period is inclusive, from 00:00:00 WIB on periodStart
+          through 23:59:59 WIB on periodEnd.
+        - periodEnd must not be earlier than periodStart.
+        - Response timestamps use ISO 8601 in UTC.
+
+        Response behavior:
+        - Records are ordered by createdAt, oldest first.
+        - Internal account fields and review notes are not returned.
+        - Nullable fields remain present in the response.
+        - No matching records returns HTTP 200 with empty riskIssues
+          and changeLog arrays.
+        - The response is returned without a data wrapper.
+
+        Access:
+        - PM, TL, and TW who are members of the project may access the data.
+        - Authentication currently uses E-5 mock Bearer tokens representing
+          F-1 accounts. Live F-1 authentication is not yet integrated.
+        - Direct D-3 service authentication and cross-group integration
+          have not yet been verified.
+        - Inactive projects may still be read.
+
       parameters:
         - name: periodStart
           in: query
@@ -868,7 +889,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 code: INVALID_PERIOD
-                message: periodEnd tidak boleh sebelum periodStart
+                message: periodStart dan periodEnd wajib berformat YYYY-MM-DD, dan periodEnd tidak boleh sebelum periodStart
         "401":
           $ref: "#/components/responses/Unauthorized"
         "403":
@@ -1715,7 +1736,7 @@ components:
 
   examples:
     ControlDataSuccess:
-      summary: Same content as examples/success.json
+      summary: Illustrative response; actual records are retrieved from the E-5 database
       value:
         projectId: PRJ-2026-014
         periodStart: "2026-09-01"
