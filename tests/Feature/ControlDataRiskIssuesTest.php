@@ -17,20 +17,20 @@ class ControlDataRiskIssuesTest extends TestCase
 
     protected $seed = true;
 
-    private const PROJECT = 'PRJ-2026-016';
+    private const PROJECT = '019a0000-d101-7000-8000-000000000016';
 
     // September 2026 in WIB, expressed as inclusive UTC boundaries.
     private const START = '2026-08-31 17:00:00';
 
     private const END = '2026-09-30 16:59:59';
 
-    private const FIRST = '55555555-5555-4555-8555-000000000101';
+    private const FIRST = '019a0000-5555-7555-8555-000000000101';
 
-    private const SECOND = '55555555-5555-4555-8555-000000000102';
+    private const SECOND = '019a0000-5555-7555-8555-000000000102';
 
-    private const THIRD = '55555555-5555-4555-8555-000000000103';
+    private const THIRD = '019a0000-5555-7555-8555-000000000103';
 
-    private const FOURTH = '55555555-5555-4555-8555-000000000104';
+    private const FOURTH = '019a0000-5555-7555-8555-000000000104';
 
     public function test_open_risk_is_included_when_unchanged_before_the_period(): void
     {
@@ -79,16 +79,16 @@ class ControlDataRiskIssuesTest extends TestCase
     {
         $this->riskIssue(self::FIRST, RiskIssueStatus::CLOSED, '2026-09-15 09:00:00');
         $this->riskIssue(self::SECOND, RiskIssueStatus::CLOSED, '2026-09-15 09:00:00', [
-            'project_id' => 'PRJ-2026-014',
+            'project_id' => '019a0000-d101-7000-8000-000000000014',
         ]);
 
-        // The shared seed also contains OPEN and IN_PROGRESS records in PRJ-2026-014.
+        // The shared seed also contains OPEN and IN_PROGRESS records in 019a0000-d101-7000-8000-000000000014.
         $this->assertSame([self::FIRST], $this->ids());
     }
 
     public function test_project_parameter_is_used_for_each_query(): void
     {
-        $otherProject = 'PRJ-2026-015';
+        $otherProject = '019a0000-d101-7000-8000-000000000015';
         $this->riskIssue(self::FIRST, RiskIssueStatus::CLOSED, '2026-09-15 09:00:00');
         $this->riskIssue(self::SECOND, RiskIssueStatus::OPEN, '2026-09-15 09:00:00', [
             'project_id' => $otherProject,
@@ -149,8 +149,8 @@ class ControlDataRiskIssuesTest extends TestCase
             'title' => 'Risiko keterlambatan data uji',
             'description' => 'Data uji fiktif belum diterima untuk pengujian modul laporan.',
             'status' => $status,
-            'pic_account_id' => 'acc-tl-0042',
-            'reported_by' => 'acc-pm-0007',
+            'pic_account_id' => '019a0000-f101-7000-8000-000000000042',
+            'reported_by' => '019a0000-f101-7000-8000-000000000007',
             'closed_at' => $status === RiskIssueStatus::CLOSED ? $updatedAt : null,
             'resolution_note' => $status === RiskIssueStatus::CLOSED ? 'Data uji cadangan telah disiapkan.' : null,
             'created_at' => '2026-08-01 09:00:00',

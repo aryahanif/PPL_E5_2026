@@ -68,13 +68,13 @@ class ProjectIndicatorCalculatorTest extends TestCase
     {
         $on = CarbonImmutable::parse('2026-09-20');
 
-        $ok = $this->calculator()->forProject('PRJ-2026-014', $on);
+        $ok = $this->calculator()->forProject('019a0000-d101-7000-8000-000000000014', $on);
         $this->assertSame(ProjectIndicator::ON_TRACK, $ok->indicator);
         $this->assertSame(45.0, $ok->targetProgress);
         $this->assertSame(48.0, $ok->actualProgress);
         $this->assertSame('2026-09-20', $ok->asOf);
 
-        $late = $this->calculator()->forProject('PRJ-2026-016', $on);
+        $late = $this->calculator()->forProject('019a0000-d101-7000-8000-000000000016', $on);
         $this->assertSame(ProjectIndicator::DELAYED, $late->indicator);
         $this->assertSame(60.0, $late->targetProgress);
         $this->assertSame(40.0, $late->actualProgress);
@@ -83,8 +83,8 @@ class ProjectIndicatorCalculatorTest extends TestCase
     public function test_target_follows_the_date(): void
     {
         // On 2026-09-05 the 014 target is 30 and 016 is 50: 016 is still behind (40 < 50).
-        $this->assertSame(30.0, $this->calculator()->forProject('PRJ-2026-014', CarbonImmutable::parse('2026-09-05'))->targetProgress);
-        $this->assertSame(ProjectIndicator::DELAYED, $this->calculator()->forProject('PRJ-2026-016', CarbonImmutable::parse('2026-09-05'))->indicator);
+        $this->assertSame(30.0, $this->calculator()->forProject('019a0000-d101-7000-8000-000000000014', CarbonImmutable::parse('2026-09-05'))->targetProgress);
+        $this->assertSame(ProjectIndicator::DELAYED, $this->calculator()->forProject('019a0000-d101-7000-8000-000000000016', CarbonImmutable::parse('2026-09-05'))->indicator);
     }
 
     public function test_actual_equal_to_target_is_on_track(): void
@@ -123,7 +123,7 @@ class ProjectIndicatorCalculatorTest extends TestCase
     public function test_no_target_yet_gives_null_indicator(): void
     {
         // Before the first E-3 target date (2026-08-01) there is nothing to compare with.
-        $reading = $this->calculator()->forProject('PRJ-2026-014', CarbonImmutable::parse('2026-07-01'));
+        $reading = $this->calculator()->forProject('019a0000-d101-7000-8000-000000000014', CarbonImmutable::parse('2026-07-01'));
 
         $this->assertNull($reading->indicator);
         $this->assertNull($reading->targetProgress);

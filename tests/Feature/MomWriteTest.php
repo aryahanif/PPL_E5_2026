@@ -16,17 +16,17 @@ class MomWriteTest extends TestCase
 
     protected $seed = true;
 
-    private const SCHEDULED = '11111111-1111-4111-8111-000000000001';
+    private const SCHEDULED = '019a0000-1111-7111-8111-000000000001';
 
-    private const DONE_NO_MOM = '11111111-1111-4111-8111-000000000002';
+    private const DONE_NO_MOM = '019a0000-1111-7111-8111-000000000002';
 
-    private const DONE_WITH_MOM = '11111111-1111-4111-8111-000000000003';
+    private const DONE_WITH_MOM = '019a0000-1111-7111-8111-000000000003';
 
-    private const FINAL_MOM = '22222222-2222-4222-8222-000000000003';
+    private const FINAL_MOM = '019a0000-2222-7222-8222-000000000003';
 
-    private const PARTICIPANT_TW = '44444444-4444-4444-8444-000002000003';
+    private const PARTICIPANT_TW = '019a0000-4444-7444-8444-000002000003';
 
-    private const PARTICIPANT_CLIENT = '44444444-4444-4444-8444-000002000004';
+    private const PARTICIPANT_CLIENT = '019a0000-4444-7444-8444-000002000004';
 
     private function body(array $override = []): array
     {
@@ -38,18 +38,18 @@ class MomWriteTest extends TestCase
             'attendance' => [self::PARTICIPANT_TW],
             'actionItems' => [[
                 'description' => 'Siapkan server uji baru',
-                'picAccountId' => 'acc-tl-0042',
+                'picAccountId' => '019a0000-f101-7000-8000-000000000042',
                 'dueDate' => now()->addDays(3)->toDateString(),
             ]],
         ];
     }
 
-    private function create(array $body, string $meeting = self::DONE_NO_MOM, string $account = 'acc-tw-0091')
+    private function create(array $body, string $meeting = self::DONE_NO_MOM, string $account = '019a0000-f101-7000-8000-000000000091')
     {
         return $this->withToken("mock-{$account}")->postJson("/api/v1/meetings/{$meeting}/mom", $body);
     }
 
-    private function edit(string $momId, array $body, string $account = 'acc-tw-0091')
+    private function edit(string $momId, array $body, string $account = '019a0000-f101-7000-8000-000000000091')
     {
         return $this->withToken("mock-{$account}")->putJson("/api/v1/moms/{$momId}", $body);
     }
@@ -58,14 +58,14 @@ class MomWriteTest extends TestCase
     {
         $response = $this->create($this->body())->assertCreated()
             ->assertJsonPath('meetingId', self::DONE_NO_MOM)
-            ->assertJsonPath('projectId', 'PRJ-2026-014')
+            ->assertJsonPath('projectId', '019a0000-d101-7000-8000-000000000014')
             ->assertJsonPath('status', 'DRAFT')
-            ->assertJsonPath('writtenBy', 'acc-tw-0091')
+            ->assertJsonPath('writtenBy', '019a0000-f101-7000-8000-000000000091')
             ->assertJsonPath('reviewedBy', null)
             ->assertJsonPath('finalizedAt', null)
             ->assertJsonCount(1, 'actionItems')
             ->assertJsonPath('actionItems.0.status', 'TODO')
-            ->assertJsonPath('actionItems.0.picAccountId', 'acc-tl-0042')
+            ->assertJsonPath('actionItems.0.picAccountId', '019a0000-f101-7000-8000-000000000042')
             ->assertJsonPath('actionItems.0.overdue', false);
 
         $momId = $response->json('momId');
@@ -73,7 +73,7 @@ class MomWriteTest extends TestCase
         $this->assertSame('MOM', $row->entity_type);
         $this->assertNull($row->from_status);
         $this->assertSame('DRAFT', $row->to_status);
-        $this->assertSame('acc-tw-0091', $row->changed_by);
+        $this->assertSame('019a0000-f101-7000-8000-000000000091', $row->changed_by);
 
         $this->assertTrue(MeetingParticipant::find(self::PARTICIPANT_TW)->attended);
         $this->assertFalse(MeetingParticipant::find(self::PARTICIPANT_CLIENT)->attended);
@@ -100,14 +100,14 @@ class MomWriteTest extends TestCase
 
     public function test_attendance_of_another_meeting_is_400(): void
     {
-        $this->create($this->body(['attendance' => ['44444444-4444-4444-8444-000003000001']]))
+        $this->create($this->body(['attendance' => ['019a0000-4444-7444-8444-000003000001']]))
             ->assertStatus(400)->assertExactJson(['code' => 'VALIDATION_ERROR', 'message' => 'Data tidak valid: attendance']);
     }
 
     public function test_pic_outside_project_is_400(): void
     {
         $body = $this->body();
-        $body['actionItems'][0]['picAccountId'] = 'acc-tw-0092';
+        $body['actionItems'][0]['picAccountId'] = '019a0000-f101-7000-8000-000000000092';
 
         $this->create($body)->assertStatus(400)->assertJsonPath('code', 'VALIDATION_ERROR');
         $this->assertSame(0, Mom::where('meeting_id', self::DONE_NO_MOM)->count());
@@ -121,23 +121,23 @@ class MomWriteTest extends TestCase
 
     public function test_pm_is_403(): void
     {
-        $this->create($this->body(), self::DONE_NO_MOM, 'acc-pm-0007')->assertStatus(403)
+        $this->create($this->body(), self::DONE_NO_MOM, '019a0000-f101-7000-8000-000000000007')->assertStatus(403)
             ->assertExactJson(['code' => 'FORBIDDEN', 'message' => 'Hanya TW yang dapat menulis MoM']);
     }
 
     public function test_tl_is_403(): void
     {
-        $this->create($this->body(), self::DONE_NO_MOM, 'acc-tl-0042')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
+        $this->create($this->body(), self::DONE_NO_MOM, '019a0000-f101-7000-8000-000000000042')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
     }
 
     public function test_non_member_is_403(): void
     {
-        $this->create($this->body(), self::DONE_NO_MOM, 'acc-tw-0092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
+        $this->create($this->body(), self::DONE_NO_MOM, '019a0000-f101-7000-8000-000000000092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
     }
 
     public function test_unknown_meeting_is_404(): void
     {
-        $this->create($this->body(), '11111111-1111-4111-8111-999999999999')->assertStatus(404)
+        $this->create($this->body(), '019a0000-1111-7111-8111-999999999999')->assertStatus(404)
             ->assertJsonPath('code', 'MEETING_NOT_FOUND');
     }
 
@@ -155,8 +155,8 @@ class MomWriteTest extends TestCase
     {
         $created = $this->create($this->body([
             'actionItems' => [
-                ['description' => 'Dipertahankan', 'picAccountId' => 'acc-tl-0042', 'dueDate' => now()->addDays(3)->toDateString()],
-                ['description' => 'Dihapus', 'picAccountId' => 'acc-tw-0091', 'dueDate' => now()->addDays(4)->toDateString()],
+                ['description' => 'Dipertahankan', 'picAccountId' => '019a0000-f101-7000-8000-000000000042', 'dueDate' => now()->addDays(3)->toDateString()],
+                ['description' => 'Dihapus', 'picAccountId' => '019a0000-f101-7000-8000-000000000091', 'dueDate' => now()->addDays(4)->toDateString()],
             ],
         ]))->assertCreated();
 
@@ -167,8 +167,8 @@ class MomWriteTest extends TestCase
             'discussion' => 'Diskusi baru',
             'attendance' => [self::PARTICIPANT_CLIENT],
             'actionItems' => [
-                ['actionItemId' => $keptId, 'description' => 'Diperbarui', 'picAccountId' => 'acc-pm-0007', 'dueDate' => now()->addDays(5)->toDateString()],
-                ['description' => 'Baru', 'picAccountId' => 'acc-tw-0091', 'dueDate' => now()->addDays(6)->toDateString()],
+                ['actionItemId' => $keptId, 'description' => 'Diperbarui', 'picAccountId' => '019a0000-f101-7000-8000-000000000007', 'dueDate' => now()->addDays(5)->toDateString()],
+                ['description' => 'Baru', 'picAccountId' => '019a0000-f101-7000-8000-000000000091', 'dueDate' => now()->addDays(6)->toDateString()],
             ],
         ]))->assertOk()
             ->assertJsonPath('momId', $momId)
@@ -176,7 +176,7 @@ class MomWriteTest extends TestCase
             ->assertJsonCount(2, 'actionItems');
 
         $this->assertSame('Diperbarui', ActionItem::find($keptId)->description);
-        $this->assertSame('acc-pm-0007', ActionItem::find($keptId)->pic_account_id);
+        $this->assertSame('019a0000-f101-7000-8000-000000000007', ActionItem::find($keptId)->pic_account_id);
         $this->assertSame(0, ActionItem::where('description', 'Dihapus')->count());
         $this->assertSame('TODO', ActionItem::where('description', 'Baru')->sole()->status->value);
         $this->assertFalse(MeetingParticipant::find(self::PARTICIPANT_TW)->attended);
@@ -187,7 +187,7 @@ class MomWriteTest extends TestCase
     {
         $momId = $this->create($this->body())->json('momId');
         $body = $this->body();
-        $body['actionItems'][0]['actionItemId'] = '33333333-3333-4333-8333-000000000001';
+        $body['actionItems'][0]['actionItemId'] = '019a0000-3333-7333-8333-000000000001';
 
         $this->edit($momId, $body)->assertStatus(400)->assertJsonPath('code', 'VALIDATION_ERROR');
     }
@@ -206,18 +206,18 @@ class MomWriteTest extends TestCase
 
     public function test_update_by_tl_is_403(): void
     {
-        $this->edit(self::FINAL_MOM, $this->body(), 'acc-tl-0042')->assertStatus(403)
+        $this->edit(self::FINAL_MOM, $this->body(), '019a0000-f101-7000-8000-000000000042')->assertStatus(403)
             ->assertJsonPath('message', 'Hanya TW yang dapat mengubah MoM');
     }
 
     public function test_update_by_non_member_is_403(): void
     {
-        $this->edit(self::FINAL_MOM, $this->body(), 'acc-tw-0092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
+        $this->edit(self::FINAL_MOM, $this->body(), '019a0000-f101-7000-8000-000000000092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
     }
 
     public function test_update_unknown_mom_is_404(): void
     {
-        $this->edit('22222222-2222-4222-8222-999999999999', $this->body())->assertStatus(404)
+        $this->edit('019a0000-2222-7222-8222-999999999999', $this->body())->assertStatus(404)
             ->assertJsonPath('code', 'MOM_NOT_FOUND');
     }
 

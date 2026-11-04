@@ -32,8 +32,8 @@ class IntegrationModesTest extends TestCase
 
         $this->assertInstanceOf(HttpIdentityProvider::class, $this->app->make(IdentityProvider::class));
         $this->assertInstanceOf(HttpProjectDirectory::class, $this->app->make(ProjectDirectory::class));
-        $this->assertNotNull($this->app->make(BaselineDirectory::class)->targetProgress('PRJ-2026-014', now()));
-        $this->assertNotNull($this->app->make(TaskDirectory::class)->actualProgress('PRJ-2026-014'));
+        $this->assertNotNull($this->app->make(BaselineDirectory::class)->targetProgress('019a0000-d101-7000-8000-000000000014', now()));
+        $this->assertNotNull($this->app->make(TaskDirectory::class)->actualProgress('019a0000-d101-7000-8000-000000000014'));
     }
 
     public function test_one_integration_can_go_live_alone(): void

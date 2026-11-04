@@ -22,13 +22,13 @@ class SharedStubsTest extends TestCase
 
     protected $seed = true;
 
-    private const MOM = '22222222-2222-4222-8222-000000000003';
+    private const MOM = '019a0000-2222-7222-8222-000000000003';
 
-    private const ITEM_TODO_TL = '33333333-3333-4333-8333-000000000001';
+    private const ITEM_TODO_TL = '019a0000-3333-7333-8333-000000000001';
 
-    private const ITEM_OVERDUE_TW = '33333333-3333-4333-8333-000000000002';
+    private const ITEM_OVERDUE_TW = '019a0000-3333-7333-8333-000000000002';
 
-    private const ITEM_DONE_PM = '33333333-3333-4333-8333-000000000003';
+    private const ITEM_DONE_PM = '019a0000-3333-7333-8333-000000000003';
 
     private function account(string $id)
     {
@@ -50,7 +50,7 @@ class SharedStubsTest extends TestCase
             'momId', 'meetingId', 'projectId', 'meetingDate', 'discussion', 'decision', 'changeSummary',
             'status', 'writtenBy', 'reviewedBy', 'reviewNote', 'finalizedAt', 'actionItems', 'createdAt', 'updatedAt',
         ], array_keys($data));
-        $this->assertSame('PRJ-2026-014', $data['projectId']);
+        $this->assertSame('019a0000-d101-7000-8000-000000000014', $data['projectId']);
         $this->assertSame('FINAL', $data['status']);
         $this->assertCount(3, $data['actionItems']);
     }
@@ -71,9 +71,9 @@ class SharedStubsTest extends TestCase
     public function test_mom_policy_roles(): void
     {
         $mom = Mom::find(self::MOM);
-        $tw = Gate::forUser($this->account('acc-tw-0091'));
-        $tl = Gate::forUser($this->account('acc-tl-0042'));
-        $pm = Gate::forUser($this->account('acc-pm-0007'));
+        $tw = Gate::forUser($this->account('019a0000-f101-7000-8000-000000000091'));
+        $tl = Gate::forUser($this->account('019a0000-f101-7000-8000-000000000042'));
+        $pm = Gate::forUser($this->account('019a0000-f101-7000-8000-000000000007'));
 
         $this->assertTrue($tw->allows('create', Mom::class));
         $this->assertTrue($tw->allows('update', $mom));
@@ -90,10 +90,10 @@ class SharedStubsTest extends TestCase
 
     public function test_only_pic_may_update_action_item_status(): void
     {
-        $item = ActionItem::find(self::ITEM_OVERDUE_TW); // PIC: acc-tw-0091
+        $item = ActionItem::find(self::ITEM_OVERDUE_TW); // PIC: 019a0000-f101-7000-8000-000000000091
 
-        $this->assertTrue(Gate::forUser($this->account('acc-tw-0091'))->allows('updateStatus', $item));
-        $this->assertFalse(Gate::forUser($this->account('acc-pm-0007'))->allows('updateStatus', $item));
-        $this->assertFalse(Gate::forUser($this->account('acc-tl-0042'))->allows('updateStatus', $item));
+        $this->assertTrue(Gate::forUser($this->account('019a0000-f101-7000-8000-000000000091'))->allows('updateStatus', $item));
+        $this->assertFalse(Gate::forUser($this->account('019a0000-f101-7000-8000-000000000007'))->allows('updateStatus', $item));
+        $this->assertFalse(Gate::forUser($this->account('019a0000-f101-7000-8000-000000000042'))->allows('updateStatus', $item));
     }
 }

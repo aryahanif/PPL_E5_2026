@@ -17,15 +17,15 @@ class MomPagesTest extends TestCase
 
     protected $seed = true;
 
-    private const SCHEDULED = '11111111-1111-4111-8111-000000000001';
+    private const SCHEDULED = '019a0000-1111-7111-8111-000000000001';
 
-    private const DONE_NO_MOM = '11111111-1111-4111-8111-000000000002';
+    private const DONE_NO_MOM = '019a0000-1111-7111-8111-000000000002';
 
-    private const DONE_WITH_MOM = '11111111-1111-4111-8111-000000000003';
+    private const DONE_WITH_MOM = '019a0000-1111-7111-8111-000000000003';
 
-    private const FINAL_MOM = '22222222-2222-4222-8222-000000000003';
+    private const FINAL_MOM = '019a0000-2222-7222-8222-000000000003';
 
-    private const PARTICIPANT_TW = '44444444-4444-4444-8444-000002000003';
+    private const PARTICIPANT_TW = '019a0000-4444-7444-8444-000002000003';
 
     private function login(string $accountId): void
     {
@@ -48,8 +48,8 @@ class MomPagesTest extends TestCase
             'changeSummary' => '',
             'attendance' => [self::PARTICIPANT_TW],
             'actionItems' => [
-                ['description' => 'Siapkan server uji baru', 'picAccountId' => 'acc-tl-0042', 'dueDate' => now()->addDays(3)->toDateString()],
-                ['description' => 'Perbarui dokumen kebutuhan', 'picAccountId' => 'acc-tw-0091', 'dueDate' => now()->addDays(5)->toDateString()],
+                ['description' => 'Siapkan server uji baru', 'picAccountId' => '019a0000-f101-7000-8000-000000000042', 'dueDate' => now()->addDays(3)->toDateString()],
+                ['description' => 'Perbarui dokumen kebutuhan', 'picAccountId' => '019a0000-f101-7000-8000-000000000091', 'dueDate' => now()->addDays(5)->toDateString()],
             ],
             'action' => 'draft',
         ];
@@ -63,7 +63,7 @@ class MomPagesTest extends TestCase
             'discussion' => 'Bahas modul login',
             'decision' => 'Lanjutkan pengembangan',
             'status' => $status,
-            'written_by' => 'acc-tw-0091',
+            'written_by' => '019a0000-f101-7000-8000-000000000091',
             'review_note' => $note,
         ]);
     }
@@ -72,7 +72,7 @@ class MomPagesTest extends TestCase
 
     public function test_tw_sees_write_mom_on_done_meeting_without_mom(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get('/meetings/'.self::DONE_NO_MOM)->assertOk()
             ->assertSee('Tulis MoM')
@@ -81,14 +81,14 @@ class MomPagesTest extends TestCase
 
     public function test_pm_does_not_see_write_mom_button(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->get('/meetings/'.self::DONE_NO_MOM)->assertOk()->assertDontSee('Tulis MoM');
     }
 
     public function test_meeting_with_mom_shows_view_link_and_badge(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get('/meetings/'.self::DONE_WITH_MOM)->assertOk()
             ->assertSee('Lihat MoM')
@@ -98,7 +98,7 @@ class MomPagesTest extends TestCase
 
     public function test_scheduled_meeting_has_no_write_mom_button(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get('/meetings/'.self::SCHEDULED)->assertOk()->assertDontSee('Tulis MoM');
     }
@@ -107,7 +107,7 @@ class MomPagesTest extends TestCase
 
     public function test_tw_sees_editor_with_wi05_sections(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get('/meetings/'.self::DONE_NO_MOM.'/mom/create')->assertOk()
             ->assertSee(['Informasi Rapat', 'Kehadiran', 'Pembahasan', 'Keputusan', 'Perubahan / Penyesuaian', 'Action Item'])
@@ -118,11 +118,11 @@ class MomPagesTest extends TestCase
 
     public function test_pm_and_tl_get_403_on_editor(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
         $this->get('/meetings/'.self::DONE_NO_MOM.'/mom/create')->assertForbidden();
         $this->post('/meetings/'.self::DONE_NO_MOM.'/mom', $this->form())->assertForbidden();
 
-        $this->switchTo('acc-tl-0042');
+        $this->switchTo('019a0000-f101-7000-8000-000000000042');
         $this->get('/meetings/'.self::DONE_NO_MOM.'/mom/create')->assertForbidden();
         $this->post('/meetings/'.self::DONE_NO_MOM.'/mom', $this->form())->assertForbidden();
 
@@ -131,7 +131,7 @@ class MomPagesTest extends TestCase
 
     public function test_non_member_is_rejected(): void
     {
-        $this->login('acc-tw-0092');
+        $this->login('019a0000-f101-7000-8000-000000000092');
 
         $this->get('/meetings/'.self::DONE_NO_MOM.'/mom/create')->assertForbidden();
         $this->post('/meetings/'.self::DONE_NO_MOM.'/mom', $this->form())->assertForbidden();
@@ -142,7 +142,7 @@ class MomPagesTest extends TestCase
 
     public function test_editor_for_meeting_that_is_not_done_is_409(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get('/meetings/'.self::SCHEDULED.'/mom/create')->assertStatus(409);
         $this->post('/meetings/'.self::SCHEDULED.'/mom', $this->form())->assertStatus(409);
@@ -150,7 +150,7 @@ class MomPagesTest extends TestCase
 
     public function test_editor_for_meeting_with_mom_redirects_to_view(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get('/meetings/'.self::DONE_WITH_MOM.'/mom/create')->assertRedirect('/moms/'.self::FINAL_MOM);
         $this->post('/meetings/'.self::DONE_WITH_MOM.'/mom', $this->form())->assertStatus(409);
@@ -158,7 +158,7 @@ class MomPagesTest extends TestCase
 
     public function test_tw_saves_draft_with_two_todo_items_and_attendance(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $response = $this->post('/meetings/'.self::DONE_NO_MOM.'/mom', $this->form());
 
@@ -166,7 +166,7 @@ class MomPagesTest extends TestCase
         $response->assertRedirect("/moms/{$mom->id}");
 
         $this->assertSame('DRAFT', $mom->status->value);
-        $this->assertSame('acc-tw-0091', $mom->written_by);
+        $this->assertSame('019a0000-f101-7000-8000-000000000091', $mom->written_by);
         $this->assertNull($mom->change_summary);
         $this->assertSame(2, $mom->actionItems()->count());
         $this->assertSame(['TODO'], $mom->actionItems->pluck('status')->map->value->unique()->all());
@@ -184,7 +184,7 @@ class MomPagesTest extends TestCase
 
     public function test_tw_submits_for_review_in_one_step(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->post('/meetings/'.self::DONE_NO_MOM.'/mom', $this->form(['action' => 'submit']));
 
@@ -195,7 +195,7 @@ class MomPagesTest extends TestCase
 
     public function test_save_with_empty_fields_returns_indonesian_errors_and_keeps_input(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
         $url = '/meetings/'.self::DONE_NO_MOM.'/mom/create';
 
         $this->from($url)
@@ -220,7 +220,7 @@ class MomPagesTest extends TestCase
 
     public function test_editor_shows_errors_and_old_input_after_failed_save(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
         $url = '/meetings/'.self::DONE_NO_MOM.'/mom/create';
 
         $this->from($url)->post('/meetings/'.self::DONE_NO_MOM.'/mom', $this->form([
@@ -236,19 +236,19 @@ class MomPagesTest extends TestCase
 
     public function test_due_date_before_meeting_date_is_rejected(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->post('/meetings/'.self::DONE_NO_MOM.'/mom', $this->form([
-            'actionItems' => [['description' => 'Tugas', 'picAccountId' => 'acc-tl-0042', 'dueDate' => now()->subDays(10)->toDateString()]],
+            'actionItems' => [['description' => 'Tugas', 'picAccountId' => '019a0000-f101-7000-8000-000000000042', 'dueDate' => now()->subDays(10)->toDateString()]],
         ]))->assertSessionHasErrors(['actionItems.0.dueDate' => 'Tenggat tidak boleh sebelum tanggal rapat']);
     }
 
     public function test_pic_outside_project_is_rejected(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->post('/meetings/'.self::DONE_NO_MOM.'/mom', $this->form([
-            'actionItems' => [['description' => 'Tugas', 'picAccountId' => 'acc-tw-0092', 'dueDate' => now()->addDay()->toDateString()]],
+            'actionItems' => [['description' => 'Tugas', 'picAccountId' => '019a0000-f101-7000-8000-000000000092', 'dueDate' => now()->addDay()->toDateString()]],
         ]))->assertSessionHasErrors('actionItems.0.picAccountId');
 
         $this->assertSame(0, Mom::where('meeting_id', self::DONE_NO_MOM)->count());
@@ -256,7 +256,7 @@ class MomPagesTest extends TestCase
 
     public function test_save_without_attendance_or_action_items_is_allowed(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->post('/meetings/'.self::DONE_NO_MOM.'/mom', $this->form(['attendance' => [], 'actionItems' => []]))
             ->assertSessionHasNoErrors();
@@ -266,19 +266,19 @@ class MomPagesTest extends TestCase
 
     public function test_tw_edits_draft_updates_removes_and_adds_rows(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $mom = $this->mom(MomStatus::DRAFT);
-        $keep = $mom->actionItems()->create(['description' => 'Lama', 'pic_account_id' => 'acc-tl-0042', 'due_date' => now()->addDays(2)->toDateString(), 'status' => 'TODO']);
-        $drop = $mom->actionItems()->create(['description' => 'Dihapus', 'pic_account_id' => 'acc-tl-0042', 'due_date' => now()->addDays(2)->toDateString(), 'status' => 'TODO']);
+        $keep = $mom->actionItems()->create(['description' => 'Lama', 'pic_account_id' => '019a0000-f101-7000-8000-000000000042', 'due_date' => now()->addDays(2)->toDateString(), 'status' => 'TODO']);
+        $drop = $mom->actionItems()->create(['description' => 'Dihapus', 'pic_account_id' => '019a0000-f101-7000-8000-000000000042', 'due_date' => now()->addDays(2)->toDateString(), 'status' => 'TODO']);
 
         $this->get("/moms/{$mom->id}/edit")->assertOk()->assertSee('Lama')->assertSee('Dihapus');
 
         $this->put("/moms/{$mom->id}", $this->form([
             'discussion' => 'Diubah',
             'actionItems' => [
-                ['actionItemId' => $keep->id, 'description' => 'Lama diperbarui', 'picAccountId' => 'acc-tw-0091', 'dueDate' => now()->addDays(4)->toDateString()],
-                ['description' => 'Baru', 'picAccountId' => 'acc-pm-0007', 'dueDate' => now()->addDays(6)->toDateString()],
+                ['actionItemId' => $keep->id, 'description' => 'Lama diperbarui', 'picAccountId' => '019a0000-f101-7000-8000-000000000091', 'dueDate' => now()->addDays(4)->toDateString()],
+                ['description' => 'Baru', 'picAccountId' => '019a0000-f101-7000-8000-000000000007', 'dueDate' => now()->addDays(6)->toDateString()],
             ],
         ]))->assertRedirect("/moms/{$mom->id}");
 
@@ -290,7 +290,7 @@ class MomPagesTest extends TestCase
 
     public function test_revision_shows_review_note_and_tw_resubmits(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
         $mom = $this->mom(MomStatus::REVISION, 'Tambahkan detail keputusan server');
 
         $this->get("/moms/{$mom->id}/edit")->assertOk()
@@ -304,7 +304,7 @@ class MomPagesTest extends TestCase
 
     public function test_editor_is_closed_for_in_review_and_final(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
         $mom = $this->mom(MomStatus::IN_REVIEW);
 
         $this->get("/moms/{$mom->id}/edit")->assertRedirect("/moms/{$mom->id}");
@@ -316,7 +316,7 @@ class MomPagesTest extends TestCase
 
     public function test_non_tw_cannot_open_or_save_edit(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
         $mom = $this->mom(MomStatus::DRAFT);
 
         $this->get("/moms/{$mom->id}/edit")->assertForbidden();
@@ -327,7 +327,7 @@ class MomPagesTest extends TestCase
 
     public function test_tw_sees_edit_button_on_draft_and_revision_only(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
         $draft = $this->mom(MomStatus::DRAFT);
 
         $this->get("/moms/{$draft->id}")->assertOk()->assertSee("/moms/{$draft->id}/edit", false);
@@ -336,7 +336,7 @@ class MomPagesTest extends TestCase
 
     public function test_final_mom_view_shows_all_content(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->get('/moms/'.self::FINAL_MOM)->assertOk()
             ->assertSee('FINAL')
@@ -349,7 +349,7 @@ class MomPagesTest extends TestCase
 
     public function test_tl_sees_review_buttons_only_when_in_review(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
         $inReview = $this->mom(MomStatus::IN_REVIEW);
 
         $this->get("/moms/{$inReview->id}")->assertOk()->assertSee(['Finalkan', 'Minta Revisi']);
@@ -358,7 +358,7 @@ class MomPagesTest extends TestCase
 
     public function test_tl_does_not_see_review_buttons_on_draft(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
         $draft = $this->mom(MomStatus::DRAFT);
 
         $this->get("/moms/{$draft->id}")->assertOk()->assertDontSee(['Finalkan', 'Minta Revisi']);
@@ -366,14 +366,14 @@ class MomPagesTest extends TestCase
 
     public function test_tl_finalizes_in_review_mom(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
         $mom = $this->mom(MomStatus::IN_REVIEW);
 
         $this->patch("/moms/{$mom->id}/status", ['status' => 'FINAL'])->assertRedirect("/moms/{$mom->id}");
 
         $mom->refresh();
         $this->assertSame('FINAL', $mom->status->value);
-        $this->assertSame('acc-tl-0042', $mom->reviewed_by);
+        $this->assertSame('019a0000-f101-7000-8000-000000000042', $mom->reviewed_by);
         $this->assertNotNull($mom->finalized_at);
 
         $row = StatusHistory::where('entity_id', $mom->id)->sole();
@@ -385,7 +385,7 @@ class MomPagesTest extends TestCase
 
     public function test_tl_request_revision_without_note_fails(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
         $mom = $this->mom(MomStatus::IN_REVIEW);
 
         $this->from("/moms/{$mom->id}")
@@ -398,7 +398,7 @@ class MomPagesTest extends TestCase
 
     public function test_tl_request_revision_with_note(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
         $mom = $this->mom(MomStatus::IN_REVIEW);
 
         $this->patch("/moms/{$mom->id}/status", ['status' => 'REVISION', 'reviewNote' => 'Lengkapi keputusan'])
@@ -412,7 +412,7 @@ class MomPagesTest extends TestCase
 
     public function test_review_of_mom_not_in_review_is_409(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
         $draft = $this->mom(MomStatus::DRAFT);
 
         $this->patch("/moms/{$draft->id}/status", ['status' => 'FINAL'])->assertStatus(409);
@@ -421,7 +421,7 @@ class MomPagesTest extends TestCase
 
     public function test_invalid_review_status_is_rejected(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
         $mom = $this->mom(MomStatus::IN_REVIEW);
 
         $this->patch("/moms/{$mom->id}/status", ['status' => 'DRAFT'])->assertSessionHasErrors('status');
@@ -430,7 +430,7 @@ class MomPagesTest extends TestCase
 
     public function test_tw_cannot_see_or_use_review_actions(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
         $mom = $this->mom(MomStatus::IN_REVIEW);
 
         $this->get("/moms/{$mom->id}")->assertOk()->assertDontSee(['Finalkan', 'Minta Revisi']);
@@ -440,7 +440,7 @@ class MomPagesTest extends TestCase
 
     public function test_pm_cannot_see_or_use_review_actions(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
         $mom = $this->mom(MomStatus::IN_REVIEW);
 
         $this->get("/moms/{$mom->id}")->assertOk()->assertDontSee(['Finalkan', 'Minta Revisi']);
@@ -449,24 +449,24 @@ class MomPagesTest extends TestCase
 
     public function test_unknown_mom_is_404(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
-        $this->get('/moms/22222222-2222-4222-8222-999999999999')->assertNotFound();
+        $this->get('/moms/019a0000-2222-7222-8222-999999999999')->assertNotFound();
     }
 
     public function test_full_flow_write_submit_revise_resubmit_finalize(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
         $this->post('/meetings/'.self::DONE_NO_MOM.'/mom', $this->form(['action' => 'submit']));
         $mom = Mom::where('meeting_id', self::DONE_NO_MOM)->sole();
 
-        $this->switchTo('acc-tl-0042');
+        $this->switchTo('019a0000-f101-7000-8000-000000000042');
         $this->patch("/moms/{$mom->id}/status", ['status' => 'REVISION', 'reviewNote' => 'Tambah detail'])->assertRedirect();
 
-        $this->switchTo('acc-tw-0091');
+        $this->switchTo('019a0000-f101-7000-8000-000000000091');
         $this->put("/moms/{$mom->id}", $this->form(['action' => 'submit']));
 
-        $this->switchTo('acc-tl-0042');
+        $this->switchTo('019a0000-f101-7000-8000-000000000042');
         $this->patch("/moms/{$mom->id}/status", ['status' => 'FINAL'])->assertRedirect();
 
         $this->assertSame('FINAL', $mom->fresh()->status->value);

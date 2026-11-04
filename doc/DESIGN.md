@@ -210,7 +210,7 @@ The role check (who may make this transition) stays in the Policy and runs befor
   `->timezone(config('e5.display_timezone'))`.
 - "Overdue" is computed, never stored: `due_date < today in WIB AND status != DONE`.
 - New migrations get a new timestamped file. Never edit a migration that is on `main`.
-- Seed data: fixed UUIDs, `updateOrCreate`, dates relative to today. `migrate:fresh --seed`
+- Seed and mock data: fixed UUID v7, `updateOrCreate`, dates relative to today. `migrate:fresh --seed`
   must give the same result every run. Fictional data only (PRD §10).
 
 ---
@@ -320,10 +320,10 @@ using these tokens, in its own PR.
 
 - Feature tests in `tests/Feature`, PHPUnit classes (not Pest).
 - DB tests use `RefreshDatabase` and `protected $seed = true;` and assert against seeded fixed IDs.
-- Authenticate API calls with `$this->withToken('mock-acc-pm-0007')->getJson(...)`.
+- Authenticate API calls with `$this->withToken('mock-019a0000-f101-7000-8000-000000000007')->getJson(...)`.
   Pages: `$this->post('/dev-login', ['accountId' => '...'])` first.
 - Required cases per endpoint: success (assert the exact shape), 400, 401, 403 (wrong
-  role **and** non-member `acc-tw-0092`), 404, and each 409 it can return.
+  role **and** non-member `019a0000-f101-7000-8000-000000000092`), 404, and each 409 it can return.
 - Error assertions use `assertExactJson(['code' => ..., 'message' => ...])` or at least
   `assertJsonPath('code', ...)`.
 - One account per test method: the mock guard keeps the first user it sees for the

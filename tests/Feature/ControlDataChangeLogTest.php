@@ -24,24 +24,24 @@ class ControlDataChangeLogTest extends TestCase
 
     protected $seed = true;
 
-    private const PROJECT = 'PRJ-2026-016';
+    private const PROJECT = '019a0000-d101-7000-8000-000000000016';
 
-    private const MEETING = '11111111-1111-4111-8111-000000000101';
+    private const MEETING = '019a0000-1111-7111-8111-000000000101';
 
-    private const MOM = '22222222-2222-4222-8222-000000000101';
+    private const MOM = '019a0000-2222-7222-8222-000000000101';
 
     // September 2026 in WIB, expressed as inclusive UTC boundaries.
     private const START = '2026-08-31 17:00:00';
 
     private const END = '2026-09-30 16:59:59';
 
-    private const FIRST = '66666666-6666-4666-8666-000000000101';
+    private const FIRST = '019a0000-6666-7666-8666-000000000101';
 
-    private const SECOND = '66666666-6666-4666-8666-000000000102';
+    private const SECOND = '019a0000-6666-7666-8666-000000000102';
 
-    private const THIRD = '66666666-6666-4666-8666-000000000103';
+    private const THIRD = '019a0000-6666-7666-8666-000000000103';
 
-    private const FOURTH = '66666666-6666-4666-8666-000000000104';
+    private const FOURTH = '019a0000-6666-7666-8666-000000000104';
 
     protected function setUp(): void
     {
@@ -53,7 +53,7 @@ class ControlDataChangeLogTest extends TestCase
             'title' => 'Rapat perubahan modul laporan',
             'scheduled_at' => '2026-08-20 02:00:00',
             'status' => MeetingStatus::DONE,
-            'created_by' => 'acc-pm-0007',
+            'created_by' => '019a0000-f101-7000-8000-000000000007',
             'created_at' => '2026-08-01 09:00:00',
             'updated_at' => '2026-08-20 02:00:00',
         ]);
@@ -65,8 +65,8 @@ class ControlDataChangeLogTest extends TestCase
             'discussion' => 'Perubahan kebutuhan modul laporan.',
             'decision' => 'Catat perubahan untuk ditindaklanjuti.',
             'status' => MomStatus::FINAL,
-            'written_by' => 'acc-tw-0091',
-            'reviewed_by' => 'acc-tl-0042',
+            'written_by' => '019a0000-f101-7000-8000-000000000091',
+            'reviewed_by' => '019a0000-f101-7000-8000-000000000042',
             'finalized_at' => '2026-08-20 03:00:00',
             'created_at' => '2026-08-20 02:00:00',
             'updated_at' => '2026-08-20 03:00:00',
@@ -177,15 +177,15 @@ class ControlDataChangeLogTest extends TestCase
     {
         $this->changeRequest(self::FIRST, ChangeRequestStatus::RECORDED, '2026-09-10 09:00:00');
         $otherProject = [
-            'project_id' => 'PRJ-2026-014',
-            'mom_id' => '22222222-2222-4222-8222-000000000003',
+            'project_id' => '019a0000-d101-7000-8000-000000000014',
+            'mom_id' => '019a0000-2222-7222-8222-000000000003',
         ];
         $this->changeRequest(self::SECOND, ChangeRequestStatus::RECORDED, '2026-09-10 09:00:00', attributes: $otherProject);
         $this->changeRequest(self::THIRD, ChangeRequestStatus::APPROVED, '2026-08-20 09:00:00', '2026-09-15 09:00:00', $otherProject);
         $this->changeRequest(self::FOURTH, ChangeRequestStatus::REJECTED, '2026-08-21 09:00:00', '2026-09-15 09:00:00', $otherProject);
 
         $this->assertSame([self::FIRST], $this->records()->modelKeys());
-        $this->assertTrue($this->records('PRJ-2026-015')->isEmpty());
+        $this->assertTrue($this->records('019a0000-d101-7000-8000-000000000015')->isEmpty());
     }
 
     public function test_results_are_ordered_by_created_at_ascending(): void
@@ -232,13 +232,13 @@ class ControlDataChangeLogTest extends TestCase
         $second = $this->changeRequest(self::SECOND, ChangeRequestStatus::APPROVED, '2026-09-11 09:00:00', '2026-09-15 09:00:00');
         $this->changeRequest(self::THIRD, ChangeRequestStatus::REJECTED, '2026-09-12 09:00:00', '2026-09-15 09:00:00');
         $first->affectedTasks()->create([
-            'task_id' => 'TSK-016-001',
-            'added_by' => 'acc-tl-0042',
+            'task_id' => '019a0000-e401-7000-8000-000000016001',
+            'added_by' => '019a0000-f101-7000-8000-000000000042',
             'created_at' => '2026-09-10 09:00:00',
         ]);
         $second->affectedTasks()->create([
-            'task_id' => 'TSK-016-002',
-            'added_by' => 'acc-tl-0042',
+            'task_id' => '019a0000-e401-7000-8000-000000016002',
+            'added_by' => '019a0000-f101-7000-8000-000000000042',
             'created_at' => '2026-09-12 09:00:00',
         ]);
 
@@ -248,8 +248,8 @@ class ControlDataChangeLogTest extends TestCase
         foreach ($records as $record) {
             $this->assertTrue($record->relationLoaded('affectedTasks'));
         }
-        $this->assertSame(['TSK-016-001'], $records[0]->affectedTasks->pluck('task_id')->all());
-        $this->assertSame(['TSK-016-002'], $records[1]->affectedTasks->pluck('task_id')->all());
+        $this->assertSame(['019a0000-e401-7000-8000-000000016001'], $records[0]->affectedTasks->pluck('task_id')->all());
+        $this->assertSame(['019a0000-e401-7000-8000-000000016002'], $records[1]->affectedTasks->pluck('task_id')->all());
         $this->assertTrue($records[2]->affectedTasks->isEmpty());
     }
 
@@ -282,8 +282,8 @@ class ControlDataChangeLogTest extends TestCase
             'is_formal_cr' => $status !== ChangeRequestStatus::RECORDED,
             'status' => $status,
             'decided_at' => $decidedAt,
-            'decided_by' => $decidedAt !== null ? 'acc-pm-0007' : null,
-            'created_by' => 'acc-pm-0007',
+            'decided_by' => $decidedAt !== null ? '019a0000-f101-7000-8000-000000000007' : null,
+            'created_by' => '019a0000-f101-7000-8000-000000000007',
             'created_at' => $createdAt,
             'updated_at' => $decidedAt ?? $createdAt,
         ], $attributes));
