@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Contracts\ProjectDirectory;
+use App\Data\Project;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -42,5 +44,64 @@ class WebPagesTest extends TestCase
         $this->post('/dev-login', ['accountId' => 'acc-tw-0092']);
 
         $this->get('/projects/PRJ-2026-014/meetings')->assertForbidden();
+    }
+
+    public function test_sidebar_menus_use_last_opened_project_on_projects_page(): void
+    {
+        $this->post('/dev-login', ['accountId' => 'acc-pm-0007']);
+
+        $this->get('/projects/PRJ-2026-016/meetings')->assertOk();
+
+        $this->get('/projects')->assertOk()
+            ->assertSee('href="/projects/PRJ-2026-016/risk-issues"', false)
+            ->assertSee('Change Request');
+
+        $this->get('/action-items')->assertOk()
+            ->assertSee('href="/projects/PRJ-2026-016/risk-issues"', false)
+            ->assertSee('href="/action-items"', false);
+    }
+
+    public function test_project_menus_are_hidden_until_a_project_is_chosen(): void
+    {
+        $this->post('/dev-login', ['accountId' => 'acc-pm-0007']);
+
+        $this->get('/projects')->assertOk()
+            ->assertSee('Action Items')
+            ->assertDontSee('Rapat</a>', false)
+            ->assertDontSee('MoM</a>', false)
+            ->assertDontSee('Change Request')
+            ->assertDontSee('Risiko &amp; Isu', false);
+    }
+
+    public function test_single_active_project_is_used_automatically(): void
+    {
+        $this->app->instance(ProjectDirectory::class, new class implements ProjectDirectory
+        {
+            public function find(string $projectId): ?Project
+            {
+                return $this->activeForAccount('')[0];
+            }
+
+            public function activeForAccount(string $accountId): array
+            {
+                return [new Project('PRJ-2026-014', 'Proyek Tunggal', true, ['acc-tw-0091'])];
+            }
+        });
+
+        $this->post('/dev-login', ['accountId' => 'acc-tw-0091']);
+
+        $this->get('/projects')->assertOk()
+            ->assertSee('href="/projects/PRJ-2026-014/risk-issues"', false);
+    }
+
+    public function test_session_project_of_another_account_is_ignored(): void
+    {
+        $this->post('/dev-login', ['accountId' => 'acc-tw-0092']);
+
+        $this->withSession(['currentProjectId' => 'PRJ-2026-014'])
+            ->get('/projects')->assertOk()
+            ->assertDontSee('PRJ-2026-014')
+            ->assertDontSee('Proyek Contoh Sistem Informasi')
+            ->assertSessionMissing('currentProjectId');
     }
 }

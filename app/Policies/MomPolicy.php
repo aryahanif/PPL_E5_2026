@@ -16,6 +16,12 @@ use Illuminate\Auth\Access\Response;
  */
 class MomPolicy
 {
+    /** Any project member can list MoMs. */
+    public function viewAny(Account $account): Response
+    {
+        return Response::allow();
+    }
+
     /** Any project member can read a MoM. */
     public function view(Account $account, Mom $mom): Response
     {

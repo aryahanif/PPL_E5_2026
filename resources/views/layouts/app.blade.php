@@ -40,9 +40,6 @@
         .nav a.active { background:linear-gradient(90deg, rgba(99,102,241,.28), rgba(99,102,241,.08)); color:#fff; box-shadow:inset 3px 0 0 #818cf8; }
         .nav span.soon { color:#64748b; cursor:default; }
         .nav .chip { margin-left:auto; font-size:10px; padding:1px 7px; border-radius:999px; background:var(--nav-2); color:#94a3b8; }
-        .project-pill { display:flex; align-items:center; gap:10px; padding:10px; border-radius:10px; background:var(--nav-2); color:#e2e8f0; }
-        .project-pill .dot { width:8px; height:8px; border-radius:50%; background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.2); }
-        .project-pill small { display:block; color:#94a3b8; font-size:11px; }
         .me { margin-top:auto; display:flex; align-items:center; gap:10px; padding:12px 10px; border-top:1px solid var(--nav-2); }
         .me div { min-width:0; flex:1; }
         .me strong { display:block; color:#fff; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -226,10 +223,12 @@
 </head>
 <body>
 @auth
+    @inject('currentProject', 'App\Services\CurrentProject')
     @php
         $me = auth()->user();
         $roleNames = ['PM' => 'Project Manager', 'TL' => 'Technical Lead', 'TW' => 'Technical Writer'];
-        $current = isset($project) ? $project : null;
+        $pageProject = $project ?? null;
+        $current = $currentProject->resolve($me, $pageProject);
     @endphp
     <input type="checkbox" id="nav-toggle" hidden>
     <div class="shell">
@@ -239,33 +238,23 @@
                 <div>ProjectFlow<small>E-5 Pengawasan</small></div>
             </div>
 
-            @if ($current)
-                <a class="project-pill" href="/projects">
-                    <span class="dot"></span>
-                    <div>{{ $current->name }}<small class="mono">{{ $current->projectId }}</small></div>
-                </a>
-            @endif
-
             <div>
                 <div class="nav-label">Menu</div>
                 <nav class="nav">
                     <a href="/projects" @class(['active' => request()->is('projects')])><x-icon name="folder" /> Proyek</a>
                     @if ($current)
-                        <a href="/projects/{{ $current->projectId }}/meetings" @class(['active' => ! request()->is('projects', 'projects/*/action-items', 'action-items*', 'projects/*/risk-issues*', 'risk-issues/*')])><x-icon name="calendar" /> Rapat</a>
-                    @else
-                        <span class="soon"><x-icon name="calendar" /> Rapat <em class="chip">Pilih proyek</em></span>
+                        <a href="/projects/{{ $current->projectId }}/meetings" @class(['active' => ! request()->is('projects', 'projects/*/moms', 'moms/*', 'meetings/*/mom/*', 'projects/*/action-items', 'action-items*', 'projects/*/risk-issues*', 'risk-issues/*', 'projects/*/change-requests*', 'change-requests/*')])><x-icon name="calendar" /> Rapat</a>
+                        <a href="/projects/{{ $current->projectId }}/moms" @class(['active' => request()->is('projects/*/moms', 'moms/*', 'meetings/*/mom/*')])><x-icon name="file" /> MoM</a>
                     @endif
-                    <span class="soon"><x-icon name="file" /> MoM <em class="chip">Dari rapat</em></span>
-                    @if ($current)
-                        <a href="/projects/{{ $current->projectId }}/action-items" @class(['active' => request()->is('projects/*/action-items', 'action-items/*')])><x-icon name="check-square" /> Action Items</a>
+                    {{-- Without a page project this stays the cross-project list. --}}
+                    @if ($pageProject)
+                        <a href="/projects/{{ $pageProject->projectId }}/action-items" @class(['active' => request()->is('projects/*/action-items', 'action-items/*')])><x-icon name="check-square" /> Action Items</a>
                     @else
                         <a href="/action-items" @class(['active' => request()->is('action-items')])><x-icon name="check-square" /> Action Items</a>
                     @endif
-                    <span class="soon"><x-icon name="change" /> Change Request <em class="chip">Slice 2</em></span>
                     @if ($current)
+                        <a href="/projects/{{ $current->projectId }}/change-requests" @class(['active' => request()->is('projects/*/change-requests*', 'change-requests/*')])><x-icon name="change" /> Change Request</a>
                         <a href="/projects/{{ $current->projectId }}/risk-issues" @class(['active' => request()->is('projects/*/risk-issues*', 'risk-issues/*')])><x-icon name="alert" /> Risiko &amp; Isu</a>
-                    @else
-                        <span class="soon"><x-icon name="alert" /> Risiko &amp; Isu <em class="chip">Pilih proyek</em></span>
                     @endif
                 </nav>
             </div>
@@ -288,8 +277,8 @@
                 <label for="nav-toggle" class="nav-open" aria-label="Buka menu"><x-icon name="menu" /></label>
                 <nav class="crumbs">
                     <a href="/projects">Proyek</a>
-                    @if ($current)
-                        <x-icon name="chevron-right" size="14" /><span>{{ $current->name }}</span>
+                    @if ($pageProject)
+                        <x-icon name="chevron-right" size="14" /><span>{{ $pageProject->name }}</span>
                     @endif
                     <x-icon name="chevron-right" size="14" /><strong>@yield('title', 'E-5')</strong>
                 </nav>

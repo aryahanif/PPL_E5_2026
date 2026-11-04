@@ -30,6 +30,15 @@
                 </form>
             @endcan
         @endif
+
+        @if ($status === App\Enums\MomStatus::FINAL)
+            @can('create', App\Models\ChangeRequest::class)
+                <form method="GET" action="/projects/{{ $project->projectId }}/change-requests/create">
+                    <input type="hidden" name="momId" value="{{ $mom->id }}">
+                    <button type="submit"><x-icon name="change" size="16" /> Catat Perubahan</button>
+                </form>
+            @endcan
+        @endif
     </div>
 
     @if ($status === App\Enums\MomStatus::REVISION && $mom->review_note)

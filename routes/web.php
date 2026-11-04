@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\ActionItemPageController;
+use App\Http\Controllers\Web\ChangeRequestPageController;
 use App\Http\Controllers\Web\DevLoginController;
 use App\Http\Controllers\Web\MeetingPageController;
 use App\Http\Controllers\Web\MomPageController;
@@ -24,6 +25,7 @@ Route::middleware('auth:web')->group(function () {
     Route::patch('/meetings/{meeting}/status', [MeetingPageController::class, 'updateStatus']);
 
     // US-2 (TW): MoM editor. US-3 (TL): MoM view and review
+    Route::get('/projects/{projectId}/moms', [MomPageController::class, 'index']);
     Route::get('/meetings/{meeting}/mom/create', [MomPageController::class, 'create']);
     Route::post('/meetings/{meeting}/mom', [MomPageController::class, 'store']);
     Route::get('/moms/{mom}', [MomPageController::class, 'show']);
@@ -36,6 +38,14 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/action-items/{actionItem}', [ActionItemPageController::class, 'show']);
     Route::get('/projects/{projectId}/action-items', [ActionItemPageController::class, 'index']);
     Route::patch('/action-items/{actionItem}/status', [ActionItemPageController::class, 'updateStatus']);
+
+    // BL-06 to BL-09: change requests and change log
+    Route::get('/projects/{projectId}/change-requests', [ChangeRequestPageController::class, 'index']);
+    Route::get('/projects/{projectId}/change-requests/create', [ChangeRequestPageController::class, 'create']);
+    Route::post('/projects/{projectId}/change-requests', [ChangeRequestPageController::class, 'store']);
+    Route::get('/change-requests/{changeRequest}', [ChangeRequestPageController::class, 'show']);
+    Route::patch('/change-requests/{changeRequest}/analysis', [ChangeRequestPageController::class, 'analyze']);
+    Route::patch('/change-requests/{changeRequest}/decision', [ChangeRequestPageController::class, 'decide']);
 
     // BL-10, BL-11: risks and issues
     Route::get('/projects/{projectId}/risk-issues', [RiskIssuePageController::class, 'index']);
