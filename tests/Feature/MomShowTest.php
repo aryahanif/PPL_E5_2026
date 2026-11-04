@@ -12,29 +12,29 @@ class MomShowTest extends TestCase
 
     protected $seed = true;
 
-    private const MOM = '22222222-2222-4222-8222-000000000003';
+    private const MOM = '019a0000-2222-7222-8222-000000000003';
 
-    private function show(string $id, string $account = 'acc-pm-0007')
+    private function show(string $id, string $account = '019a0000-f101-7000-8000-000000000007')
     {
         return $this->withToken("mock-{$account}")->getJson("/api/v1/moms/{$id}");
     }
 
     public function test_member_reads_mom_with_action_items(): void
     {
-        $this->show(self::MOM, 'acc-tw-0091')->assertOk()
+        $this->show(self::MOM, '019a0000-f101-7000-8000-000000000091')->assertOk()
             ->assertJsonPath('momId', self::MOM)
-            ->assertJsonPath('meetingId', '11111111-1111-4111-8111-000000000003')
-            ->assertJsonPath('projectId', 'PRJ-2026-014')
+            ->assertJsonPath('meetingId', '019a0000-1111-7111-8111-000000000003')
+            ->assertJsonPath('projectId', '019a0000-d101-7000-8000-000000000014')
             ->assertJsonPath('status', 'FINAL')
-            ->assertJsonPath('writtenBy', 'acc-tw-0091')
-            ->assertJsonPath('reviewedBy', 'acc-tl-0042')
+            ->assertJsonPath('writtenBy', '019a0000-f101-7000-8000-000000000091')
+            ->assertJsonPath('reviewedBy', '019a0000-f101-7000-8000-000000000042')
             ->assertJsonCount(3, 'actionItems')
             ->assertJsonStructure(['actionItems' => [['actionItemId', 'momId', 'projectId', 'description', 'picAccountId', 'dueDate', 'status', 'overdue', 'completedAt', 'createdAt', 'updatedAt']]]);
     }
 
     public function test_pm_can_read_mom(): void
     {
-        $this->show(self::MOM, 'acc-pm-0007')->assertOk()->assertJsonPath('momId', self::MOM);
+        $this->show(self::MOM, '019a0000-f101-7000-8000-000000000007')->assertOk()->assertJsonPath('momId', self::MOM);
     }
 
     public function test_overdue_is_computed(): void
@@ -53,11 +53,11 @@ class MomShowTest extends TestCase
 
     public function test_non_member_is_403(): void
     {
-        $this->show(self::MOM, 'acc-tw-0092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
+        $this->show(self::MOM, '019a0000-f101-7000-8000-000000000092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
     }
 
     public function test_unknown_mom_is_404(): void
     {
-        $this->show('22222222-2222-4222-8222-999999999999')->assertStatus(404)->assertJsonPath('code', 'MOM_NOT_FOUND');
+        $this->show('019a0000-2222-7222-8222-999999999999')->assertStatus(404)->assertJsonPath('code', 'MOM_NOT_FOUND');
     }
 }

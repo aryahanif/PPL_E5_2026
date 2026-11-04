@@ -16,7 +16,7 @@ class ChangeRequestCreateTest extends TestCase
 
     protected $seed = true;
 
-    private const FINAL_MOM = '22222222-2222-4222-8222-000000000003';
+    private const FINAL_MOM = '019a0000-2222-7222-8222-000000000003';
 
     private function body(array $overrides = []): array
     {
@@ -29,7 +29,7 @@ class ChangeRequestCreateTest extends TestCase
         ], $overrides);
     }
 
-    private function postChange(array $body, string $account = 'acc-pm-0007')
+    private function postChange(array $body, string $account = '019a0000-f101-7000-8000-000000000007')
     {
         return $this->withToken("mock-{$account}")->postJson('/api/v1/change-requests', $body);
     }
@@ -37,23 +37,23 @@ class ChangeRequestCreateTest extends TestCase
     public function test_pm_records_non_formal_change_and_history(): void
     {
         $response = $this->postChange($this->body())->assertCreated()
-            ->assertJsonPath('projectId', 'PRJ-2026-014')
+            ->assertJsonPath('projectId', '019a0000-d101-7000-8000-000000000014')
             ->assertJsonPath('momId', self::FINAL_MOM)
             ->assertJsonPath('isFormalCr', false)
             ->assertJsonPath('status', 'RECORDED')
-            ->assertJsonPath('createdBy', 'acc-pm-0007');
+            ->assertJsonPath('createdBy', '019a0000-f101-7000-8000-000000000007');
 
         $history = StatusHistory::where('entity_type', ChangeRequest::HISTORY_TYPE)
             ->where('entity_id', $response->json('changeRequestId'))->sole();
 
         $this->assertNull($history->from_status);
         $this->assertSame('RECORDED', $history->to_status);
-        $this->assertSame('acc-pm-0007', $history->changed_by);
+        $this->assertSame('019a0000-f101-7000-8000-000000000007', $history->changed_by);
     }
 
     public function test_tl_records_formal_cr_as_pending_analysis(): void
     {
-        $response = $this->postChange($this->body(['isFormalCr' => true]), 'acc-tl-0042')
+        $response = $this->postChange($this->body(['isFormalCr' => true]), '019a0000-f101-7000-8000-000000000042')
             ->assertCreated()->assertJsonPath('status', 'PENDING_ANALYSIS');
 
         $this->assertSame('PENDING_ANALYSIS', StatusHistory::where('entity_id', $response->json('changeRequestId'))->sole()->to_status);
@@ -68,27 +68,27 @@ class ChangeRequestCreateTest extends TestCase
     public function test_mom_must_be_final(): void
     {
         Mom::create([
-            'meeting_id' => '11111111-1111-4111-8111-000000000002',
+            'meeting_id' => '019a0000-1111-7111-8111-000000000002',
             'meeting_date' => now()->subDays(2)->toDateString(),
             'discussion' => 'Diskusi',
             'decision' => 'Keputusan',
             'status' => MomStatus::DRAFT,
-            'written_by' => 'acc-tw-0091',
+            'written_by' => '019a0000-f101-7000-8000-000000000091',
         ]);
 
-        $this->postChange($this->body(['momId' => Mom::where('meeting_id', '11111111-1111-4111-8111-000000000002')->value('id')]))
+        $this->postChange($this->body(['momId' => Mom::where('meeting_id', '019a0000-1111-7111-8111-000000000002')->value('id')]))
             ->assertStatus(409)->assertJsonPath('code', 'MOM_NOT_FINAL');
     }
 
     public function test_inactive_project_is_409(): void
     {
         $meeting = Meeting::create([
-            'project_id' => 'PRJ-2026-015',
+            'project_id' => '019a0000-d101-7000-8000-000000000015',
             'title' => 'Rapat proyek nonaktif',
             'scheduled_at' => now(),
             'location' => null,
             'status' => 'DONE',
-            'created_by' => 'acc-pm-0007',
+            'created_by' => '019a0000-f101-7000-8000-000000000007',
         ]);
         $mom = Mom::create([
             'meeting_id' => $meeting->id,
@@ -96,7 +96,7 @@ class ChangeRequestCreateTest extends TestCase
             'discussion' => 'Diskusi',
             'decision' => 'Keputusan',
             'status' => MomStatus::FINAL,
-            'written_by' => 'acc-tw-0091',
+            'written_by' => '019a0000-f101-7000-8000-000000000091',
         ]);
 
         $this->postChange($this->body(['momId' => $mom->id]))
@@ -111,15 +111,15 @@ class ChangeRequestCreateTest extends TestCase
 
     public function test_tw_and_non_member_are_403(): void
     {
-        $this->postChange($this->body(), 'acc-tw-0091')->assertStatus(403)
+        $this->postChange($this->body(), '019a0000-f101-7000-8000-000000000091')->assertStatus(403)
             ->assertJsonPath('code', 'FORBIDDEN');
-        $this->postChange($this->body(), 'acc-tw-0092')->assertStatus(403)
+        $this->postChange($this->body(), '019a0000-f101-7000-8000-000000000092')->assertStatus(403)
             ->assertJsonPath('code', 'FORBIDDEN');
     }
 
     public function test_unknown_mom_is_404(): void
     {
-        $this->postChange($this->body(['momId' => '22222222-2222-4222-8222-999999999999']))
+        $this->postChange($this->body(['momId' => '019a0000-2222-7222-8222-999999999999']))
             ->assertStatus(404)->assertJsonPath('code', 'MOM_NOT_FOUND');
     }
 }

@@ -28,29 +28,29 @@ class ControlDataTest extends TestCase
 
     protected $seed = true;
 
-    private const PROJECT = 'PRJ-2026-016';
+    private const PROJECT = '019a0000-d101-7000-8000-000000000016';
 
     private const PERIOD = '?periodStart=2026-09-01&periodEnd=2026-09-30';
 
-    private const MEETING = '11111111-1111-4111-8111-000000000301';
+    private const MEETING = '019a0000-1111-7111-8111-000000000301';
 
-    private const MOM = '22222222-2222-4222-8222-000000000301';
+    private const MOM = '019a0000-2222-7222-8222-000000000301';
 
-    private const RISK_FIRST = '55555555-5555-4555-8555-000000000301';
+    private const RISK_FIRST = '019a0000-5555-7555-8555-000000000301';
 
-    private const RISK_SECOND = '55555555-5555-4555-8555-000000000302';
+    private const RISK_SECOND = '019a0000-5555-7555-8555-000000000302';
 
-    private const RISK_THIRD = '55555555-5555-4555-8555-000000000303';
+    private const RISK_THIRD = '019a0000-5555-7555-8555-000000000303';
 
-    private const CHANGE_FIRST = '66666666-6666-4666-8666-000000000301';
+    private const CHANGE_FIRST = '019a0000-6666-7666-8666-000000000301';
 
-    private const CHANGE_SECOND = '66666666-6666-4666-8666-000000000302';
+    private const CHANGE_SECOND = '019a0000-6666-7666-8666-000000000302';
 
-    private const CHANGE_THIRD = '66666666-6666-4666-8666-000000000303';
+    private const CHANGE_THIRD = '019a0000-6666-7666-8666-000000000303';
 
-    private const CHANGE_FOURTH = '66666666-6666-4666-8666-000000000304';
+    private const CHANGE_FOURTH = '019a0000-6666-7666-8666-000000000304';
 
-    private const CHANGE_FIFTH = '66666666-6666-4666-8666-000000000305';
+    private const CHANGE_FIFTH = '019a0000-6666-7666-8666-000000000305';
 
     protected function setUp(): void
     {
@@ -64,7 +64,7 @@ class ControlDataTest extends TestCase
             'title' => 'Rapat pengendalian proyek',
             'scheduled_at' => '2026-08-20 02:00:00',
             'status' => MeetingStatus::DONE,
-            'created_by' => 'acc-pm-0007',
+            'created_by' => '019a0000-f101-7000-8000-000000000007',
         ]);
 
         Mom::forceCreate([
@@ -74,8 +74,8 @@ class ControlDataTest extends TestCase
             'discussion' => 'Risiko dan perubahan modul laporan.',
             'decision' => 'Catat risiko dan perubahan untuk ditindaklanjuti.',
             'status' => MomStatus::FINAL,
-            'written_by' => 'acc-tw-0091',
-            'reviewed_by' => 'acc-tl-0042',
+            'written_by' => '019a0000-f101-7000-8000-000000000091',
+            'reviewed_by' => '019a0000-f101-7000-8000-000000000042',
             'finalized_at' => '2026-08-20 03:00:00',
         ]);
     }
@@ -91,15 +91,15 @@ class ControlDataTest extends TestCase
             'impact' => 'Tambah dua hari untuk pengujian.',
             'decision_note' => 'Disetujui untuk rilis berikutnya.',
             'decided_at' => '2026-09-17 04:00:00',
-            'analyzed_by' => 'acc-tl-0042',
-            'decided_by' => 'acc-pm-0007',
-            'baseline_item_id' => 'BSL-016-01',
+            'analyzed_by' => '019a0000-f101-7000-8000-000000000042',
+            'decided_by' => '019a0000-f101-7000-8000-000000000007',
+            'baseline_item_id' => '019a0000-e301-7000-8000-000000016001',
         ]);
-        foreach (['TSK-016-001', 'TSK-016-002'] as $taskId) {
+        foreach (['019a0000-e401-7000-8000-000000016001', '019a0000-e401-7000-8000-000000016002'] as $taskId) {
             $change->affectedTasks()->create([
                 'task_id' => $taskId,
                 'impact_note' => 'Perbarui pengujian.',
-                'added_by' => 'acc-tl-0042',
+                'added_by' => '019a0000-f101-7000-8000-000000000042',
                 'created_at' => '2026-09-16 03:00:00',
             ]);
         }
@@ -107,7 +107,7 @@ class ControlDataTest extends TestCase
         $response = $this->fetch()->assertOk();
         $taskIds = $response->json('changeLog.0.affectedTaskIds');
         $this->assertIsList($taskIds);
-        $this->assertEqualsCanonicalizing(['TSK-016-001', 'TSK-016-002'], $taskIds);
+        $this->assertEqualsCanonicalizing(['019a0000-e401-7000-8000-000000016001', '019a0000-e401-7000-8000-000000016002'], $taskIds);
 
         $response->assertExactJson([
             'projectId' => self::PROJECT,
@@ -121,7 +121,7 @@ class ControlDataTest extends TestCase
                 'description' => 'Data uji fiktif belum diterima.',
                 'impactLevel' => null,
                 'status' => 'CLOSED',
-                'picAccountId' => 'acc-tl-0042',
+                'picAccountId' => '019a0000-f101-7000-8000-000000000042',
                 'createdAt' => '2026-08-01T09:00:00Z',
                 'closedAt' => '2026-09-15T09:00:00Z',
                 'resolutionNote' => 'Data uji cadangan telah disiapkan.',
@@ -137,7 +137,7 @@ class ControlDataTest extends TestCase
                 'decisionNote' => 'Disetujui untuk rilis berikutnya.',
                 'createdAt' => '2026-09-10T09:00:00Z',
                 'decidedAt' => '2026-09-17T04:00:00Z',
-                'baselineItemId' => 'BSL-016-01',
+                'baselineItemId' => '019a0000-e301-7000-8000-000000016001',
                 'affectedTaskIds' => $taskIds,
             ]],
         ]);
@@ -186,9 +186,9 @@ class ControlDataTest extends TestCase
     {
         $this->riskIssue(self::RISK_FIRST);
         $this->changeRequest(self::CHANGE_FIRST);
-        $this->riskIssue(self::RISK_SECOND, attributes: ['project_id' => 'PRJ-2026-014']);
+        $this->riskIssue(self::RISK_SECOND, attributes: ['project_id' => '019a0000-d101-7000-8000-000000000014']);
         $this->riskIssue(self::RISK_THIRD, attributes: [
-            'project_id' => 'PRJ-2026-014',
+            'project_id' => '019a0000-d101-7000-8000-000000000014',
             'status' => RiskIssueStatus::OPEN,
             'closed_at' => null,
             'resolution_note' => null,
@@ -199,8 +199,8 @@ class ControlDataTest extends TestCase
             self::CHANGE_FOURTH => ChangeRequestStatus::REJECTED,
         ] as $id => $status) {
             $this->changeRequest($id, attributes: [
-                'project_id' => 'PRJ-2026-014',
-                'mom_id' => '22222222-2222-4222-8222-000000000003',
+                'project_id' => '019a0000-d101-7000-8000-000000000014',
+                'mom_id' => '019a0000-2222-7222-8222-000000000003',
                 'status' => $status,
                 'is_formal_cr' => $status !== ChangeRequestStatus::RECORDED,
                 'decided_at' => $status === ChangeRequestStatus::RECORDED ? null : '2026-09-15 09:00:00',
@@ -352,9 +352,9 @@ class ControlDataTest extends TestCase
     public static function projectMembers(): array
     {
         return [
-            'PM' => ['acc-pm-0007'],
-            'TL' => ['acc-tl-0042'],
-            'TW' => ['acc-tw-0091'],
+            'PM' => ['019a0000-f101-7000-8000-000000000007'],
+            'TL' => ['019a0000-f101-7000-8000-000000000042'],
+            'TW' => ['019a0000-f101-7000-8000-000000000091'],
         ];
     }
 
@@ -401,14 +401,14 @@ class ControlDataTest extends TestCase
 
     public function test_non_member_is_403(): void
     {
-        $this->fetch(account: 'acc-tw-0092')->assertStatus(403)
+        $this->fetch(account: '019a0000-f101-7000-8000-000000000092')->assertStatus(403)
             ->assertExactJson(['code' => 'FORBIDDEN', 'message' => 'Anda bukan anggota proyek ini']);
     }
 
     public function test_unknown_project_is_404(): void
     {
-        $this->fetch('PRJ-2026-999')->assertStatus(404)
-            ->assertExactJson(['code' => 'PROJECT_NOT_FOUND', 'message' => 'Proyek PRJ-2026-999 tidak ditemukan']);
+        $this->fetch('019a0000-d101-7000-8000-000000000999')->assertStatus(404)
+            ->assertExactJson(['code' => 'PROJECT_NOT_FOUND', 'message' => 'Proyek 019a0000-d101-7000-8000-000000000999 tidak ditemukan']);
     }
 
     public function test_no_matching_data_is_200_with_empty_arrays_and_no_wrapper(): void
@@ -439,16 +439,16 @@ class ControlDataTest extends TestCase
 
     public function test_same_day_period_and_inactive_project_reads_are_allowed(): void
     {
-        $this->riskIssue(self::RISK_FIRST, '2026-09-15 09:00:00', ['project_id' => 'PRJ-2026-015']);
+        $this->riskIssue(self::RISK_FIRST, '2026-09-15 09:00:00', ['project_id' => '019a0000-d101-7000-8000-000000000015']);
 
-        $this->fetch('PRJ-2026-015', '?periodStart=2026-09-15&periodEnd=2026-09-15')->assertOk()
-            ->assertJsonPath('projectId', 'PRJ-2026-015')
+        $this->fetch('019a0000-d101-7000-8000-000000000015', '?periodStart=2026-09-15&periodEnd=2026-09-15')->assertOk()
+            ->assertJsonPath('projectId', '019a0000-d101-7000-8000-000000000015')
             ->assertJsonPath('periodStart', '2026-09-15')
             ->assertJsonPath('periodEnd', '2026-09-15')
             ->assertJsonPath('riskIssues.*.riskIssueId', [self::RISK_FIRST]);
     }
 
-    private function fetch(string $projectId = self::PROJECT, string $query = self::PERIOD, string $account = 'acc-pm-0007'): TestResponse
+    private function fetch(string $projectId = self::PROJECT, string $query = self::PERIOD, string $account = '019a0000-f101-7000-8000-000000000007'): TestResponse
     {
         return $this->withToken("mock-{$account}")->getJson("/api/v1/projects/{$projectId}/control-data{$query}");
     }
@@ -462,8 +462,8 @@ class ControlDataTest extends TestCase
             'title' => 'Risiko keterlambatan data uji',
             'description' => 'Data uji fiktif belum diterima.',
             'status' => RiskIssueStatus::CLOSED,
-            'pic_account_id' => 'acc-tl-0042',
-            'reported_by' => 'acc-pm-0007',
+            'pic_account_id' => '019a0000-f101-7000-8000-000000000042',
+            'reported_by' => '019a0000-f101-7000-8000-000000000007',
             'closed_at' => $updatedAt,
             'resolution_note' => 'Data uji cadangan telah disiapkan.',
             'created_at' => '2026-08-01 09:00:00',
@@ -482,7 +482,7 @@ class ControlDataTest extends TestCase
             'change_type' => ChangeType::TASK,
             'is_formal_cr' => false,
             'status' => ChangeRequestStatus::RECORDED,
-            'created_by' => 'acc-tw-0091',
+            'created_by' => '019a0000-f101-7000-8000-000000000091',
             'created_at' => $createdAt,
             'updated_at' => $createdAt,
         ], $attributes));

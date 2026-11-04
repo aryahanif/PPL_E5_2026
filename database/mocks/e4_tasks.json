@@ -1,8 +1,8 @@
 [
-  { "taskId": "TSK-014-001", "projectId": "PRJ-2026-014", "title": "Implementasi login", "weight": 2, "progress": 60 },
-  { "taskId": "TSK-014-002", "projectId": "PRJ-2026-014", "title": "Implementasi laporan", "weight": 2, "progress": 50 },
-  { "taskId": "TSK-014-003", "projectId": "PRJ-2026-014", "title": "Dokumentasi", "weight": 1, "progress": 20 },
-  { "taskId": "TSK-016-001", "projectId": "PRJ-2026-016", "title": "Implementasi inventaris", "weight": 1, "progress": 50 },
-  { "taskId": "TSK-016-002", "projectId": "PRJ-2026-016", "title": "Implementasi laporan stok", "weight": 1, "progress": 30 },
-  { "taskId": "TSK-016-003", "projectId": "PRJ-2026-016", "title": "Pengujian", "weight": 2, "progress": 40 }
+  { "taskId": "019a0000-e401-7000-8000-000000014001", "projectId": "019a0000-d101-7000-8000-000000000014", "title": "Implementasi login", "weight": 2, "progress": 60 },
+  { "taskId": "019a0000-e401-7000-8000-000000014002", "projectId": "019a0000-d101-7000-8000-000000000014", "title": "Implementasi laporan", "weight": 2, "progress": 50 },
+  { "taskId": "019a0000-e401-7000-8000-000000014003", "projectId": "019a0000-d101-7000-8000-000000000014", "title": "Dokumentasi", "weight": 1, "progress": 20 },
+  { "taskId": "019a0000-e401-7000-8000-000000016001", "projectId": "019a0000-d101-7000-8000-000000000016", "title": "Implementasi inventaris", "weight": 1, "progress": 50 },
+  { "taskId": "019a0000-e401-7000-8000-000000016002", "projectId": "019a0000-d101-7000-8000-000000000016", "title": "Implementasi laporan stok", "weight": 1, "progress": 30 },
+  { "taskId": "019a0000-e401-7000-8000-000000016003", "projectId": "019a0000-d101-7000-8000-000000000016", "title": "Pengujian", "weight": 2, "progress": 40 }
 ]

@@ -15,9 +15,9 @@ class MomStatusTest extends TestCase
 
     protected $seed = true;
 
-    private const DONE_NO_MOM = '11111111-1111-4111-8111-000000000002';
+    private const DONE_NO_MOM = '019a0000-1111-7111-8111-000000000002';
 
-    private const FINAL_MOM = '22222222-2222-4222-8222-000000000003';
+    private const FINAL_MOM = '019a0000-2222-7222-8222-000000000003';
 
     private function draftMom(MomStatus $status = MomStatus::DRAFT): Mom
     {
@@ -27,7 +27,7 @@ class MomStatusTest extends TestCase
             'discussion' => 'Bahasan',
             'decision' => 'Keputusan',
             'status' => $status,
-            'written_by' => 'acc-tw-0091',
+            'written_by' => '019a0000-f101-7000-8000-000000000091',
         ]);
     }
 
@@ -43,23 +43,23 @@ class MomStatusTest extends TestCase
     {
         $mom = $this->draftMom();
         $mom->actionItems()->create([
-            'description' => 'Tindak lanjut', 'pic_account_id' => 'acc-tl-0042',
+            'description' => 'Tindak lanjut', 'pic_account_id' => '019a0000-f101-7000-8000-000000000042',
             'due_date' => now()->addDays(3)->toDateString(), 'status' => 'TODO',
         ]);
 
-        $this->change($mom->id, ['status' => 'IN_REVIEW'], 'acc-tw-0091')->assertOk()
+        $this->change($mom->id, ['status' => 'IN_REVIEW'], '019a0000-f101-7000-8000-000000000091')->assertOk()
             ->assertJsonPath('momId', $mom->id)->assertJsonPath('status', 'IN_REVIEW');
 
-        $this->change($mom->id, ['status' => 'REVISION', 'reviewNote' => 'Poin 2 belum jelas'], 'acc-tl-0042')->assertOk()
+        $this->change($mom->id, ['status' => 'REVISION', 'reviewNote' => 'Poin 2 belum jelas'], '019a0000-f101-7000-8000-000000000042')->assertOk()
             ->assertJsonPath('status', 'REVISION')
             ->assertJsonPath('reviewNote', 'Poin 2 belum jelas')
             ->assertJsonPath('finalizedAt', null);
 
-        $this->change($mom->id, ['status' => 'IN_REVIEW'], 'acc-tw-0091')->assertOk();
+        $this->change($mom->id, ['status' => 'IN_REVIEW'], '019a0000-f101-7000-8000-000000000091')->assertOk();
 
-        $this->change($mom->id, ['status' => 'FINAL'], 'acc-tl-0042')->assertOk()
+        $this->change($mom->id, ['status' => 'FINAL'], '019a0000-f101-7000-8000-000000000042')->assertOk()
             ->assertJsonPath('status', 'FINAL')
-            ->assertJsonPath('reviewedBy', 'acc-tl-0042')
+            ->assertJsonPath('reviewedBy', '019a0000-f101-7000-8000-000000000042')
             ->assertJsonCount(1, 'actionItems')
             ->assertJsonPath('actionItems.0.description', 'Tindak lanjut');
 
@@ -76,7 +76,7 @@ class MomStatusTest extends TestCase
     {
         $mom = $this->draftMom(MomStatus::IN_REVIEW);
 
-        $this->change($mom->id, ['status' => 'REVISION'], 'acc-tl-0042')->assertStatus(400)
+        $this->change($mom->id, ['status' => 'REVISION'], '019a0000-f101-7000-8000-000000000042')->assertStatus(400)
             ->assertJsonPath('code', 'VALIDATION_ERROR');
 
         $this->assertSame(0, StatusHistory::where('entity_id', $mom->id)->count());
@@ -84,7 +84,7 @@ class MomStatusTest extends TestCase
 
     public function test_invalid_status_value_is_400(): void
     {
-        $this->change($this->draftMom()->id, ['status' => 'DRAFT'], 'acc-tw-0091')->assertStatus(400)
+        $this->change($this->draftMom()->id, ['status' => 'DRAFT'], '019a0000-f101-7000-8000-000000000091')->assertStatus(400)
             ->assertJsonPath('code', 'VALIDATION_ERROR');
     }
 
@@ -98,7 +98,7 @@ class MomStatusTest extends TestCase
     {
         $mom = $this->draftMom(MomStatus::IN_REVIEW);
 
-        $this->change($mom->id, ['status' => 'FINAL'], 'acc-tw-0091')->assertStatus(403)
+        $this->change($mom->id, ['status' => 'FINAL'], '019a0000-f101-7000-8000-000000000091')->assertStatus(403)
             ->assertExactJson(['code' => 'FORBIDDEN', 'message' => 'Hanya TL yang dapat mereview MoM']);
     }
 
@@ -106,25 +106,25 @@ class MomStatusTest extends TestCase
     {
         $mom = $this->draftMom();
 
-        $this->change($mom->id, ['status' => 'IN_REVIEW'], 'acc-tl-0042')->assertStatus(403)
+        $this->change($mom->id, ['status' => 'IN_REVIEW'], '019a0000-f101-7000-8000-000000000042')->assertStatus(403)
             ->assertExactJson(['code' => 'FORBIDDEN', 'message' => 'Hanya TW yang dapat mengajukan review MoM']);
     }
 
     public function test_non_member_is_403(): void
     {
-        $this->change($this->draftMom()->id, ['status' => 'IN_REVIEW'], 'acc-tw-0092')->assertStatus(403)
+        $this->change($this->draftMom()->id, ['status' => 'IN_REVIEW'], '019a0000-f101-7000-8000-000000000092')->assertStatus(403)
             ->assertJsonPath('code', 'FORBIDDEN');
     }
 
     public function test_unknown_mom_is_404(): void
     {
-        $this->change('22222222-2222-4222-8222-999999999999', ['status' => 'IN_REVIEW'], 'acc-tw-0091')
+        $this->change('019a0000-2222-7222-8222-999999999999', ['status' => 'IN_REVIEW'], '019a0000-f101-7000-8000-000000000091')
             ->assertStatus(404)->assertJsonPath('code', 'MOM_NOT_FOUND');
     }
 
     public function test_final_to_in_review_is_409(): void
     {
-        $this->change(self::FINAL_MOM, ['status' => 'IN_REVIEW'], 'acc-tw-0091')->assertStatus(409)
+        $this->change(self::FINAL_MOM, ['status' => 'IN_REVIEW'], '019a0000-f101-7000-8000-000000000091')->assertStatus(409)
             ->assertExactJson(['code' => 'INVALID_STATUS_TRANSITION', 'message' => 'Status FINAL tidak dapat diubah ke IN_REVIEW']);
 
         $this->assertSame(0, StatusHistory::where('entity_id', self::FINAL_MOM)->count());
@@ -132,7 +132,7 @@ class MomStatusTest extends TestCase
 
     public function test_draft_to_final_is_409(): void
     {
-        $this->change($this->draftMom()->id, ['status' => 'FINAL'], 'acc-tl-0042')->assertStatus(409)
+        $this->change($this->draftMom()->id, ['status' => 'FINAL'], '019a0000-f101-7000-8000-000000000042')->assertStatus(409)
             ->assertJsonPath('code', 'INVALID_STATUS_TRANSITION');
     }
 }

@@ -30,7 +30,7 @@ use Illuminate\Support\Carbon;
  */
 class DatabaseSeeder extends Seeder
 {
-    private const PROJECT = 'PRJ-2026-014';
+    private const PROJECT = '019a0000-d101-7000-8000-000000000014';
 
     public function run(): void
     {
@@ -38,29 +38,29 @@ class DatabaseSeeder extends Seeder
         $at = fn (int $days, int $hourWib = 9) => $today->copy()->addDays($days)->setTime($hourWib, 0)->utc();
 
         // 1. Upcoming meeting, no MoM yet
-        $this->meeting('11111111-1111-4111-8111-000000000001', 'Weekly Meeting Minggu 4', $at(5), MeetingStatus::SCHEDULED);
+        $this->meeting('019a0000-1111-7111-8111-000000000001', 'Weekly Meeting Minggu 4', $at(5), MeetingStatus::SCHEDULED);
 
         // 2. Finished meeting waiting for the TW to write the MoM
-        $this->meeting('11111111-1111-4111-8111-000000000002', 'Weekly Meeting Minggu 3', $at(-2), MeetingStatus::DONE);
+        $this->meeting('019a0000-1111-7111-8111-000000000002', 'Weekly Meeting Minggu 3', $at(-2), MeetingStatus::DONE);
 
         // 3. Finished meeting with a FINAL MoM and three action items
-        $m3 = $this->meeting('11111111-1111-4111-8111-000000000003', 'Weekly Meeting Minggu 2', $at(-9), MeetingStatus::DONE, attended: true);
+        $m3 = $this->meeting('019a0000-1111-7111-8111-000000000003', 'Weekly Meeting Minggu 2', $at(-9), MeetingStatus::DONE, attended: true);
 
-        $mom = Mom::updateOrCreate(['id' => '22222222-2222-4222-8222-000000000003'], [
+        $mom = Mom::updateOrCreate(['id' => '019a0000-2222-7222-8222-000000000003'], [
             'meeting_id' => $m3->id,
             'meeting_date' => $today->copy()->subDays(9)->toDateString(),
             'discussion' => 'Progres modul login 70%, server uji bermasalah.',
             'decision' => 'Server uji dipindah ke lingkungan baru.',
             'change_summary' => null,
             'status' => MomStatus::FINAL,
-            'written_by' => 'acc-tw-0091',
-            'reviewed_by' => 'acc-tl-0042',
+            'written_by' => '019a0000-f101-7000-8000-000000000091',
+            'reviewed_by' => '019a0000-f101-7000-8000-000000000042',
             'finalized_at' => $at(-8),
         ]);
 
         $changeRequests = [
-            ['66666666-6666-4666-8666-000000000001', 'Penyesuaian label tombol login', ChangeType::TASK, false, ChangeRequestStatus::RECORDED],
-            ['66666666-6666-4666-8666-000000000002', 'Penambahan validasi autentikasi', ChangeType::SCOPE, true, ChangeRequestStatus::PENDING_ANALYSIS],
+            ['019a0000-6666-7666-8666-000000000001', 'Penyesuaian label tombol login', ChangeType::TASK, false, ChangeRequestStatus::RECORDED],
+            ['019a0000-6666-7666-8666-000000000002', 'Penambahan validasi autentikasi', ChangeType::SCOPE, true, ChangeRequestStatus::PENDING_ANALYSIS],
         ];
 
         foreach ($changeRequests as [$id, $description, $type, $formal, $status]) {
@@ -72,7 +72,7 @@ class DatabaseSeeder extends Seeder
                 'change_type' => $type,
                 'is_formal_cr' => $formal,
                 'status' => $status,
-                'created_by' => 'acc-pm-0007',
+                'created_by' => '019a0000-f101-7000-8000-000000000007',
             ]);
 
             StatusHistory::firstOrCreate([
@@ -81,16 +81,16 @@ class DatabaseSeeder extends Seeder
                 'to_status' => $status->value,
             ], [
                 'from_status' => null,
-                'changed_by' => 'acc-pm-0007',
+                'changed_by' => '019a0000-f101-7000-8000-000000000007',
                 'changed_at' => $at(-8),
                 'note' => null,
             ]);
         }
 
         $items = [
-            ['33333333-3333-4333-8333-000000000001', 'Siapkan server uji baru', 'acc-tl-0042', 3, ActionItemStatus::TODO],
-            ['33333333-3333-4333-8333-000000000002', 'Perbarui dokumen kebutuhan modul login', 'acc-tw-0091', -1, ActionItemStatus::IN_PROGRESS], // overdue
-            ['33333333-3333-4333-8333-000000000003', 'Konfirmasi jadwal demo ke klien', 'acc-pm-0007', -5, ActionItemStatus::DONE],
+            ['019a0000-3333-7333-8333-000000000001', 'Siapkan server uji baru', '019a0000-f101-7000-8000-000000000042', 3, ActionItemStatus::TODO],
+            ['019a0000-3333-7333-8333-000000000002', 'Perbarui dokumen kebutuhan modul login', '019a0000-f101-7000-8000-000000000091', -1, ActionItemStatus::IN_PROGRESS], // overdue
+            ['019a0000-3333-7333-8333-000000000003', 'Konfirmasi jadwal demo ke klien', '019a0000-f101-7000-8000-000000000007', -5, ActionItemStatus::DONE],
         ];
 
         foreach ($items as [$id, $description, $pic, $dueInDays, $status]) {
@@ -106,8 +106,8 @@ class DatabaseSeeder extends Seeder
 
         // 4. Risk register: one OPEN risk (PIC PM) and one IN_PROGRESS issue from the MoM above (PIC TL)
         $risks = [
-            ['55555555-5555-4555-8555-000000000001', RiskIssueType::RISK, 'Klien terlambat memberi data uji', 'Data uji dari klien belum diterima, pengujian modul laporan bisa mundur.', ImpactLevel::MEDIUM, null, 'acc-pm-0007', null, RiskIssueStatus::OPEN, -7],
-            ['55555555-5555-4555-8555-000000000002', RiskIssueType::ISSUE, 'Server uji tidak dapat diakses', 'Developer tidak bisa menjalankan testing sejak Senin.', ImpactLevel::HIGH, 'Pindah ke server cadangan', 'acc-tl-0042', $mom->id, RiskIssueStatus::IN_PROGRESS, -3],
+            ['019a0000-5555-7555-8555-000000000001', RiskIssueType::RISK, 'Klien terlambat memberi data uji', 'Data uji dari klien belum diterima, pengujian modul laporan bisa mundur.', ImpactLevel::MEDIUM, null, '019a0000-f101-7000-8000-000000000007', null, RiskIssueStatus::OPEN, -7],
+            ['019a0000-5555-7555-8555-000000000002', RiskIssueType::ISSUE, 'Server uji tidak dapat diakses', 'Developer tidak bisa menjalankan testing sejak Senin.', ImpactLevel::HIGH, 'Pindah ke server cadangan', '019a0000-f101-7000-8000-000000000042', $mom->id, RiskIssueStatus::IN_PROGRESS, -3],
         ];
 
         foreach ($risks as [$id, $type, $title, $description, $impact, $mitigation, $pic, $momId, $status, $createdInDays]) {
@@ -121,7 +121,7 @@ class DatabaseSeeder extends Seeder
                 'pic_account_id' => $pic,
                 'source_mom_id' => $momId,
                 'status' => $status,
-                'reported_by' => 'acc-pm-0007',
+                'reported_by' => '019a0000-f101-7000-8000-000000000007',
             ]);
 
             $item->forceFill(['created_at' => $at($createdInDays)])->save();
@@ -136,15 +136,15 @@ class DatabaseSeeder extends Seeder
             'scheduled_at' => $scheduledAt,
             'location' => 'Ruang Rapat 2',
             'status' => $status,
-            'created_by' => 'acc-pm-0007',
+            'created_by' => '019a0000-f101-7000-8000-000000000007',
         ]);
 
         $participants = [
-            ['acc-pm-0007', null], ['acc-tl-0042', null], ['acc-tw-0091', null], [null, 'Perwakilan Klien'],
+            ['019a0000-f101-7000-8000-000000000007', null], ['019a0000-f101-7000-8000-000000000042', null], ['019a0000-f101-7000-8000-000000000091', null], [null, 'Perwakilan Klien'],
         ];
 
         foreach ($participants as $i => [$accountId, $clientName]) {
-            MeetingParticipant::updateOrCreate(['id' => '44444444-4444-4444-8444-'.substr($id, -6).sprintf('%06d', $i + 1)], [
+            MeetingParticipant::updateOrCreate(['id' => '019a0000-4444-7444-8444-'.substr($id, -6).sprintf('%06d', $i + 1)], [
                 'meeting_id' => $meeting->id,
                 'participant_type' => $accountId ? ParticipantType::INTERNAL : ParticipantType::CLIENT,
                 'account_id' => $accountId,

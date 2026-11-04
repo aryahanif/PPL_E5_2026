@@ -14,11 +14,11 @@ class RiskIssueUpdateTest extends TestCase
 
     protected $seed = true;
 
-    private const RISK = '55555555-5555-4555-8555-000000000001'; // OPEN, PIC PM
+    private const RISK = '019a0000-5555-7555-8555-000000000001'; // OPEN, PIC PM
 
-    private const ISSUE = '55555555-5555-4555-8555-000000000002'; // IN_PROGRESS, PIC TL
+    private const ISSUE = '019a0000-5555-7555-8555-000000000002'; // IN_PROGRESS, PIC TL
 
-    private function change(string $id, array $body, string $account = 'acc-pm-0007')
+    private function change(string $id, array $body, string $account = '019a0000-f101-7000-8000-000000000007')
     {
         $this->app['auth']->forgetGuards();
 
@@ -38,22 +38,22 @@ class RiskIssueUpdateTest extends TestCase
             'description' => 'Klien belum mengirim data uji.',
             'impactLevel' => 'HIGH',
             'mitigation' => 'Pakai data uji buatan',
-            'picAccountId' => 'acc-tl-0042',
-            'sourceMomId' => '22222222-2222-4222-8222-000000000003',
+            'picAccountId' => '019a0000-f101-7000-8000-000000000042',
+            'sourceMomId' => '019a0000-2222-7222-8222-000000000003',
             'status' => 'IN_PROGRESS',
         ])->assertOk()
             ->assertJsonPath('type', 'ISSUE')
             ->assertJsonPath('title', 'Data uji belum diterima')
             ->assertJsonPath('impactLevel', 'HIGH')
             ->assertJsonPath('mitigation', 'Pakai data uji buatan')
-            ->assertJsonPath('picAccountId', 'acc-tl-0042')
-            ->assertJsonPath('sourceMomId', '22222222-2222-4222-8222-000000000003')
+            ->assertJsonPath('picAccountId', '019a0000-f101-7000-8000-000000000042')
+            ->assertJsonPath('sourceMomId', '019a0000-2222-7222-8222-000000000003')
             ->assertJsonPath('status', 'IN_PROGRESS');
 
         $rows = $this->history(self::RISK)->map(fn ($r) => [$r->from_status, $r->to_status, $r->note, $r->changed_by])->all();
         $this->assertEqualsCanonicalizing([
-            ['OPEN', 'OPEN', 'PIC diubah ke acc-tl-0042', 'acc-pm-0007'],
-            ['OPEN', 'IN_PROGRESS', null, 'acc-pm-0007'],
+            ['OPEN', 'OPEN', 'PIC diubah ke 019a0000-f101-7000-8000-000000000042', '019a0000-f101-7000-8000-000000000007'],
+            ['OPEN', 'IN_PROGRESS', null, '019a0000-f101-7000-8000-000000000007'],
         ], $rows);
     }
 
@@ -73,7 +73,7 @@ class RiskIssueUpdateTest extends TestCase
             'status' => 'CLOSED',
             'mitigation' => 'Server cadangan dipakai permanen',
             'resolutionNote' => 'Server dipindah, testing berjalan normal',
-        ], 'acc-tl-0042')->assertOk()
+        ], '019a0000-f101-7000-8000-000000000042')->assertOk()
             ->assertJsonPath('status', 'CLOSED')
             ->assertJsonPath('mitigation', 'Server cadangan dipakai permanen')
             ->assertJsonPath('resolutionNote', 'Server dipindah, testing berjalan normal');
@@ -81,7 +81,7 @@ class RiskIssueUpdateTest extends TestCase
         $this->assertNotNull($response->json('closedAt'));
 
         $row = $this->history(self::ISSUE)->sole();
-        $this->assertSame(['IN_PROGRESS', 'CLOSED', 'acc-tl-0042'], [$row->from_status, $row->to_status, $row->changed_by]);
+        $this->assertSame(['IN_PROGRESS', 'CLOSED', '019a0000-f101-7000-8000-000000000042'], [$row->from_status, $row->to_status, $row->changed_by]);
     }
 
     public function test_sending_current_status_is_not_a_change(): void
@@ -94,7 +94,7 @@ class RiskIssueUpdateTest extends TestCase
 
     public function test_closing_without_resolution_note_is_400(): void
     {
-        $this->change(self::ISSUE, ['status' => 'CLOSED'], 'acc-tl-0042')->assertStatus(400)
+        $this->change(self::ISSUE, ['status' => 'CLOSED'], '019a0000-f101-7000-8000-000000000042')->assertStatus(400)
             ->assertExactJson(['code' => 'VALIDATION_ERROR', 'message' => 'Data tidak valid: resolutionNote']);
 
         $this->assertSame('IN_PROGRESS', RiskIssue::find(self::ISSUE)->status->value);
@@ -108,7 +108,7 @@ class RiskIssueUpdateTest extends TestCase
         $this->change(self::RISK, ['status' => 'DONE', 'title' => ''])->assertStatus(400)
             ->assertExactJson(['code' => 'VALIDATION_ERROR', 'message' => 'Data tidak valid: title, status']);
 
-        $this->change(self::RISK, ['picAccountId' => 'acc-tw-0092'])->assertStatus(400)
+        $this->change(self::RISK, ['picAccountId' => '019a0000-f101-7000-8000-000000000092'])->assertStatus(400)
             ->assertExactJson(['code' => 'VALIDATION_ERROR', 'message' => 'Data tidak valid: picAccountId']);
     }
 
@@ -134,13 +134,13 @@ class RiskIssueUpdateTest extends TestCase
 
     public function test_tw_is_403(): void
     {
-        $this->change(self::RISK, ['status' => 'IN_PROGRESS'], 'acc-tw-0091')->assertStatus(403)
+        $this->change(self::RISK, ['status' => 'IN_PROGRESS'], '019a0000-f101-7000-8000-000000000091')->assertStatus(403)
             ->assertExactJson(['code' => 'FORBIDDEN', 'message' => 'Hanya PM atau TL yang dapat mengubah risiko/isu']);
     }
 
     public function test_tl_on_item_of_someone_else_is_403(): void
     {
-        $this->change(self::RISK, ['status' => 'IN_PROGRESS'], 'acc-tl-0042')->assertStatus(403)
+        $this->change(self::RISK, ['status' => 'IN_PROGRESS'], '019a0000-f101-7000-8000-000000000042')->assertStatus(403)
             ->assertExactJson(['code' => 'FORBIDDEN', 'message' => 'TL hanya dapat mengubah risiko/isu yang PIC-nya dirinya']);
 
         $this->assertSame('OPEN', RiskIssue::find(self::RISK)->status->value);
@@ -148,24 +148,24 @@ class RiskIssueUpdateTest extends TestCase
 
     public function test_tl_changing_other_fields_is_403(): void
     {
-        $this->change(self::ISSUE, ['title' => 'Judul baru'], 'acc-tl-0042')->assertStatus(403)
+        $this->change(self::ISSUE, ['title' => 'Judul baru'], '019a0000-f101-7000-8000-000000000042')->assertStatus(403)
             ->assertExactJson(['code' => 'FORBIDDEN', 'message' => 'TL hanya dapat mengubah status, mitigasi, dan catatan penyelesaian']);
 
-        $this->change(self::ISSUE, ['picAccountId' => 'acc-pm-0007'], 'acc-tl-0042')->assertStatus(403)
+        $this->change(self::ISSUE, ['picAccountId' => '019a0000-f101-7000-8000-000000000007'], '019a0000-f101-7000-8000-000000000042')->assertStatus(403)
             ->assertJsonPath('code', 'FORBIDDEN');
 
-        $this->assertSame('acc-tl-0042', RiskIssue::find(self::ISSUE)->pic_account_id);
+        $this->assertSame('019a0000-f101-7000-8000-000000000042', RiskIssue::find(self::ISSUE)->pic_account_id);
     }
 
     public function test_non_member_is_403(): void
     {
-        $this->change(self::RISK, ['status' => 'IN_PROGRESS'], 'acc-tw-0092')->assertStatus(403)
+        $this->change(self::RISK, ['status' => 'IN_PROGRESS'], '019a0000-f101-7000-8000-000000000092')->assertStatus(403)
             ->assertExactJson(['code' => 'FORBIDDEN', 'message' => 'Anda bukan anggota proyek ini']);
     }
 
     public function test_unknown_id_is_404(): void
     {
-        $this->change('00000000-0000-4000-8000-000000000000', ['status' => 'IN_PROGRESS'])->assertStatus(404)
+        $this->change('00000000-0000-7000-8000-000000000000', ['status' => 'IN_PROGRESS'])->assertStatus(404)
             ->assertExactJson(['code' => 'RISK_ISSUE_NOT_FOUND', 'message' => 'Data tidak ditemukan']);
     }
 }

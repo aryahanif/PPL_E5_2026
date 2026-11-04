@@ -21,7 +21,7 @@ class ProjectIndicatorPagesTest extends TestCase
 
     public function test_pm_sees_indicator_on_each_project_card(): void
     {
-        $this->post('/dev-login', ['accountId' => 'acc-pm-0007']);
+        $this->post('/dev-login', ['accountId' => '019a0000-f101-7000-8000-000000000007']);
 
         $this->get('/projects')->assertOk()
             ->assertSee('Indikator:', false)
@@ -31,7 +31,7 @@ class ProjectIndicatorPagesTest extends TestCase
 
     public function test_tl_does_not_see_the_indicator(): void
     {
-        $this->post('/dev-login', ['accountId' => 'acc-tl-0042']);
+        $this->post('/dev-login', ['accountId' => '019a0000-f101-7000-8000-000000000042']);
 
         $this->get('/projects')->assertOk()
             ->assertSee('Proyek Contoh Terlambat')
@@ -42,7 +42,7 @@ class ProjectIndicatorPagesTest extends TestCase
 
     public function test_tw_does_not_see_the_indicator(): void
     {
-        $this->post('/dev-login', ['accountId' => 'acc-tw-0091']);
+        $this->post('/dev-login', ['accountId' => '019a0000-f101-7000-8000-000000000091']);
 
         $this->get('/projects')->assertOk()->assertDontSee('Indikator:', false);
     }

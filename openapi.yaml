@@ -25,7 +25,7 @@ info:
 
     Authentication: Bearer token issued by F-1. Until F-1 publishes its token
     scheme, E-5 accepts mock tokens of the form `mock-<accountId>`, for example
-    `Bearer mock-acc-pm-0007`.
+    `Bearer mock-019a0000-f101-7000-8000-000000000007`.
 servers:
   - url: http://localhost:8000/api/v1
     description: Local development (php artisan serve)
@@ -133,11 +133,11 @@ paths:
               location: Ruang Rapat 2
               participants:
                 - participantType: INTERNAL
-                  accountId: acc-pm-0007
+                  accountId: 019a0000-f101-7000-8000-000000000007
                 - participantType: INTERNAL
-                  accountId: acc-tl-0042
+                  accountId: 019a0000-f101-7000-8000-000000000042
                 - participantType: INTERNAL
-                  accountId: acc-tw-0091
+                  accountId: 019a0000-f101-7000-8000-000000000091
                 - participantType: CLIENT
                   displayName: Perwakilan Klien
       responses:
@@ -373,7 +373,7 @@ paths:
           description: Limit to one project (D-1 ID).
           schema:
             type: string
-          example: PRJ-2026-014
+          example: 019a0000-d101-7000-8000-000000000014
         - name: mine
           in: query
           required: false
@@ -506,7 +506,7 @@ paths:
               description: Developer tidak bisa menjalankan testing sejak Senin
               impactLevel: HIGH
               mitigation: Pindah ke server cadangan
-              picAccountId: acc-tl-0042
+              picAccountId: 019a0000-f101-7000-8000-000000000042
       responses:
         "201":
           description: Risk or issue created.
@@ -541,7 +541,7 @@ paths:
             schema:
               $ref: "#/components/schemas/ChangeRequestCreate"
             example:
-              momId: 22222222-2222-4222-8222-000000000003
+              momId: 019a0000-2222-7222-8222-000000000003
               changeDescription: Penambahan validasi login
               source: USER
               changeType: SCOPE
@@ -719,7 +719,7 @@ paths:
               reassign:
                 summary: PM changes the PIC
                 value:
-                  picAccountId: acc-pm-0007
+                  picAccountId: 019a0000-f101-7000-8000-000000000007
       responses:
         "200":
           description: Updated risk or issue.
@@ -782,7 +782,7 @@ paths:
                 delayed:
                   summary: Actual progress is below target
                   value:
-                    projectId: PRJ-2026-016
+                    projectId: 019a0000-d101-7000-8000-000000000016
                     indicator: DELAYED
                     targetProgress: 60.0
                     actualProgress: 40.0
@@ -807,7 +807,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 code: PROJECT_NOT_FOUND
-                message: Proyek PRJ-2026-999 tidak ditemukan
+                message: Proyek 019a0000-d101-7000-8000-000000000999 tidak ditemukan
 
   /projects/{projectId}/control-data:
     parameters:
@@ -902,7 +902,7 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 code: PROJECT_NOT_FOUND
-                message: Proyek PRJ-2026-999 tidak ditemukan
+                message: Proyek 019a0000-d101-7000-8000-000000000999 tidak ditemukan
 
 components:
   securitySchemes:
@@ -919,7 +919,7 @@ components:
       description: Project ID issued by D-1.
       schema:
         type: string
-      example: PRJ-2026-014
+      example: 019a0000-d101-7000-8000-000000000014
     MeetingId:
       name: meetingId
       in: path
@@ -1039,7 +1039,7 @@ components:
       properties:
         accountId:
           type: string
-          example: acc-tw-0091
+          example: 019a0000-f101-7000-8000-000000000091
         displayName:
           type: string
           example: Technical Writer Contoh
@@ -1050,7 +1050,7 @@ components:
           description: Projects this account is a member of.
           items:
             type: string
-          example: [PRJ-2026-014]
+          example: [019a0000-d101-7000-8000-000000000014]
 
     Project:
       type: object
@@ -1059,7 +1059,7 @@ components:
       properties:
         projectId:
           type: string
-          example: PRJ-2026-014
+          example: 019a0000-d101-7000-8000-000000000014
         name:
           type: string
           example: Proyek Contoh Sistem Informasi
@@ -1085,7 +1085,7 @@ components:
         accountId:
           type: string
           description: Required when INTERNAL. Unique within one meeting.
-          example: acc-tl-0042
+          example: 019a0000-f101-7000-8000-000000000042
         displayName:
           type: string
           maxLength: 150
@@ -1105,7 +1105,7 @@ components:
         accountId:
           type: [string, "null"]
           description: Null for CLIENT participants.
-          example: acc-tl-0042
+          example: 019a0000-f101-7000-8000-000000000042
         displayName:
           type: string
           description: For INTERNAL, resolved from F-1 when shown.
@@ -1152,7 +1152,7 @@ components:
           example: 3f9a8b72-0c4e-4d1a-8b6f-2e3d4c5b6a07
         projectId:
           type: string
-          example: PRJ-2026-014
+          example: 019a0000-d101-7000-8000-000000000014
         title:
           type: string
           example: Weekly Meeting Minggu 3
@@ -1204,7 +1204,7 @@ components:
         picAccountId:
           type: string
           description: WI-05 item 6. A PM, TL, or TW account in the project.
-          example: acc-tl-0042
+          example: 019a0000-f101-7000-8000-000000000042
         dueDate:
           type: string
           format: date
@@ -1268,7 +1268,7 @@ components:
           format: uuid
         projectId:
           type: string
-          example: PRJ-2026-014
+          example: 019a0000-d101-7000-8000-000000000014
         meetingDate:
           type: string
           format: date
@@ -1283,7 +1283,7 @@ components:
         writtenBy:
           type: string
           description: TW account (F-1).
-          example: acc-tw-0091
+          example: 019a0000-f101-7000-8000-000000000091
         reviewedBy:
           type: [string, "null"]
           description: TL account (F-1). Null until reviewed.
@@ -1329,13 +1329,13 @@ components:
           format: uuid
         projectId:
           type: string
-          example: PRJ-2026-014
+          example: 019a0000-d101-7000-8000-000000000014
         description:
           type: string
           example: Siapkan server uji baru
         picAccountId:
           type: string
-          example: acc-tl-0042
+          example: 019a0000-f101-7000-8000-000000000042
         dueDate:
           type: string
           format: date
@@ -1502,7 +1502,7 @@ components:
         picAccountId:
           type: string
           description: PIC account (F-1). Must be a member of the project.
-          example: acc-tl-0042
+          example: 019a0000-f101-7000-8000-000000000042
         sourceMomId:
           type: [string, "null"]
           format: uuid
@@ -1548,7 +1548,7 @@ components:
           example: e72f8a1b-2c3d-4e5f-8a6b-9c0d1e2f3a11
         projectId:
           type: string
-          example: PRJ-2026-014
+          example: 019a0000-d101-7000-8000-000000000014
         type:
           $ref: "#/components/schemas/RiskIssueType"
         title:
@@ -1569,7 +1569,7 @@ components:
         picAccountId:
           type: string
           description: PIC account (F-1).
-          example: acc-tl-0042
+          example: 019a0000-f101-7000-8000-000000000042
         sourceMomId:
           type: [string, "null"]
           format: uuid
@@ -1578,7 +1578,7 @@ components:
         reportedBy:
           type: string
           description: PM account (F-1) that recorded the item. Internal; not sent to D-3.
-          example: acc-pm-0007
+          example: 019a0000-f101-7000-8000-000000000007
         closedAt:
           type: [string, "null"]
           format: date-time
@@ -1679,7 +1679,7 @@ components:
       properties:
         projectId:
           type: string
-          example: PRJ-2026-016
+          example: 019a0000-d101-7000-8000-000000000016
         indicator:
           description: "`null` when the target or the progress is not available yet."
           oneOf:
@@ -1738,7 +1738,7 @@ components:
     ControlDataSuccess:
       summary: Illustrative response; actual records are retrieved from the E-5 database
       value:
-        projectId: PRJ-2026-014
+        projectId: 019a0000-d101-7000-8000-000000000014
         periodStart: "2026-09-01"
         periodEnd: "2026-09-30"
         generatedAt: "2026-10-01T02:00:00Z"
@@ -1749,7 +1749,7 @@ components:
             description: Testing tidak dapat dijalankan sejak Senin
             impactLevel: HIGH
             status: CLOSED
-            picAccountId: acc-tl-0042
+            picAccountId: 019a0000-f101-7000-8000-000000000042
             createdAt: "2026-09-08T09:00:00Z"
             closedAt: "2026-09-10T07:00:00Z"
             resolutionNote: Dipindah ke server cadangan
@@ -1764,8 +1764,8 @@ components:
             decisionNote: Disetujui, masuk sprint berikut
             createdAt: "2026-09-15T05:00:00Z"
             decidedAt: "2026-09-17T04:00:00Z"
-            baselineItemId: BSL-014-03
-            affectedTaskIds: [TSK-014-027]
+            baselineItemId: 019a0000-e301-7000-8000-000000014003
+            affectedTaskIds: [019a0000-e401-7000-8000-000000014027]
           - changeRequestId: d69e0a1b-2c3d-4e5f-8a6b-7c8d9e0f1a20
             changeDescription: Jadwal demo internal dimajukan satu hari
             source: INTERNAL
