@@ -24,6 +24,7 @@ Route::middleware('auth:web')->group(function () {
     Route::patch('/meetings/{meeting}/status', [MeetingPageController::class, 'updateStatus']);
 
     // US-2 (TW): MoM editor. US-3 (TL): MoM view and review
+    Route::get('/projects/{projectId}/moms', [MomPageController::class, 'index']);
     Route::get('/meetings/{meeting}/mom/create', [MomPageController::class, 'create']);
     Route::post('/meetings/{meeting}/mom', [MomPageController::class, 'store']);
     Route::get('/moms/{mom}', [MomPageController::class, 'show']);

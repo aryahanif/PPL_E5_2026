@@ -15,7 +15,7 @@ use App\Services\ProjectGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
-/** Screens 5 and 6: MoM editor for the TW, MoM view and review for the TL (UI-K05-07). */
+/** Screens 5 and 6: MoM list per project, editor for the TW, MoM view and review for the TL (UI-K05-07). */
 class MomPageController extends Controller
 {
     private const MESSAGES = [
@@ -37,6 +37,27 @@ class MomPageController extends Controller
         private MomWriter $writer,
         private MomStatusService $statuses,
     ) {}
+
+    public function index(Request $request, string $projectId)
+    {
+        $project = $this->projects->forMember($projectId, $request->user());
+        Gate::authorize('viewAny', Mom::class);
+
+        $all = Mom::with('meeting')
+            ->whereHas('meeting', fn ($q) => $q->where('project_id', $projectId))
+            ->orderByDesc('meeting_date')
+            ->get();
+
+        $status = MomStatus::tryFrom((string) $request->query('status'));
+
+        return view('moms.index', [
+            'project' => $project,
+            'moms' => $status ? $all->where('status', $status)->values() : $all,
+            'counts' => $all->countBy(fn ($mom) => $mom->status->value),
+            'status' => $status,
+            'people' => collect($this->identity->all())->keyBy('accountId'),
+        ]);
+    }
 
     public function create(Request $request, Meeting $meeting)
     {
