@@ -243,7 +243,7 @@
                 <nav class="nav">
                     <a href="/projects" @class(['active' => request()->is('projects')])><x-icon name="folder" /> Proyek</a>
                     @if ($current)
-                        <a href="/projects/{{ $current->projectId }}/meetings" @class(['active' => ! request()->is('projects', 'projects/*/moms', 'moms/*', 'meetings/*/mom/*', 'projects/*/action-items', 'action-items*', 'projects/*/risk-issues*', 'risk-issues/*')])><x-icon name="calendar" /> Rapat</a>
+                        <a href="/projects/{{ $current->projectId }}/meetings" @class(['active' => ! request()->is('projects', 'projects/*/moms', 'moms/*', 'meetings/*/mom/*', 'projects/*/action-items', 'action-items*', 'projects/*/risk-issues*', 'risk-issues/*', 'projects/*/change-requests*', 'change-requests/*')])><x-icon name="calendar" /> Rapat</a>
                         <a href="/projects/{{ $current->projectId }}/moms" @class(['active' => request()->is('projects/*/moms', 'moms/*', 'meetings/*/mom/*')])><x-icon name="file" /> MoM</a>
                     @endif
                     {{-- Without a page project this stays the cross-project list. --}}
@@ -253,7 +253,7 @@
                         <a href="/action-items" @class(['active' => request()->is('action-items')])><x-icon name="check-square" /> Action Items</a>
                     @endif
                     @if ($current)
-                        <span class="soon"><x-icon name="change" /> Change Request <em class="chip">Segera</em></span>
+                        <a href="/projects/{{ $current->projectId }}/change-requests" @class(['active' => request()->is('projects/*/change-requests*', 'change-requests/*')])><x-icon name="change" /> Change Request</a>
                         <a href="/projects/{{ $current->projectId }}/risk-issues" @class(['active' => request()->is('projects/*/risk-issues*', 'risk-issues/*')])><x-icon name="alert" /> Risiko &amp; Isu</a>
                     @endif
                 </nav>

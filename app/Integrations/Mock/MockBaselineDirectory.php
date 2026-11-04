@@ -36,6 +36,11 @@ class MockBaselineDirectory implements BaselineDirectory
         return $this->items[$baselineItemId] ?? null;
     }
 
+    public function forProject(string $projectId): array
+    {
+        return array_values(array_filter($this->items, fn (BaselineItem $item) => $item->projectId === $projectId));
+    }
+
     public function targetProgress(string $projectId, CarbonInterface $date): ?float
     {
         $day = $date->toDateString();

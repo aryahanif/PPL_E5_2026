@@ -32,6 +32,11 @@ class ProjectIndicatorCalculatorTest extends TestCase
                 return null;
             }
 
+            public function forProject(string $projectId): array
+            {
+                return [];
+            }
+
             public function targetProgress(string $projectId, CarbonInterface $date): ?float
             {
                 return $this->target;
