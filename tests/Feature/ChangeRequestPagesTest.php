@@ -14,13 +14,13 @@ class ChangeRequestPagesTest extends TestCase
 
     protected $seed = true;
 
-    private const PROJECT = 'PRJ-2026-014';
+    private const PROJECT = '019a0000-d101-7000-8000-000000000014';
 
-    private const FINAL_MOM = '22222222-2222-4222-8222-000000000003';
+    private const FINAL_MOM = '019a0000-2222-7222-8222-000000000003';
 
-    private const RECORDED = '66666666-6666-4666-8666-000000000001';
+    private const RECORDED = '019a0000-6666-7666-8666-000000000001';
 
-    private const PENDING = '66666666-6666-4666-8666-000000000002';
+    private const PENDING = '019a0000-6666-7666-8666-000000000002';
 
     private function login(string $accountId): void
     {
@@ -47,7 +47,7 @@ class ChangeRequestPagesTest extends TestCase
     private function analyzed(): ChangeRequest
     {
         return ChangeRequest::findOrFail(self::PENDING)->forceFill([
-            'status' => 'ANALYZED', 'impact' => 'Tambah 3 hari', 'baseline_item_id' => 'BSL-014-01', 'analyzed_by' => 'acc-tl-0042',
+            'status' => 'ANALYZED', 'impact' => 'Tambah 3 hari', 'baseline_item_id' => '019a0000-e301-7000-8000-000000014001', 'analyzed_by' => '019a0000-f101-7000-8000-000000000042',
         ]);
     }
 
@@ -55,7 +55,7 @@ class ChangeRequestPagesTest extends TestCase
 
     public function test_pm_sees_change_log_and_record_button(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->get($this->url())->assertOk()
             ->assertSee(['Penyesuaian label tombol login', 'Penambahan validasi autentikasi'])
@@ -64,7 +64,7 @@ class ChangeRequestPagesTest extends TestCase
 
     public function test_tw_sees_change_log_without_record_button(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get($this->url())->assertOk()
             ->assertSee('Penyesuaian label tombol login')
@@ -73,7 +73,7 @@ class ChangeRequestPagesTest extends TestCase
 
     public function test_status_filter_narrows_the_list(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
 
         $this->get($this->url('?status=RECORDED'))->assertOk()
             ->assertSee('Penyesuaian label tombol login')
@@ -82,7 +82,7 @@ class ChangeRequestPagesTest extends TestCase
 
     public function test_non_member_is_403(): void
     {
-        $this->login('acc-tw-0092');
+        $this->login('019a0000-f101-7000-8000-000000000092');
 
         $this->get($this->url())->assertForbidden();
     }
@@ -91,7 +91,7 @@ class ChangeRequestPagesTest extends TestCase
 
     public function test_tl_records_formal_cr_as_pending_analysis(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
 
         $this->get($this->url('/create'))->assertOk()->assertSee('Weekly Meeting Minggu 2');
 
@@ -100,13 +100,13 @@ class ChangeRequestPagesTest extends TestCase
         $item = ChangeRequest::where('change_description', 'Klien meminta ekspor laporan ke Excel')->firstOrFail();
         $response->assertRedirect("/change-requests/{$item->id}");
         $this->assertSame('PENDING_ANALYSIS', $item->status->value);
-        $this->assertSame('acc-tl-0042', $item->created_by);
+        $this->assertSame('019a0000-f101-7000-8000-000000000042', $item->created_by);
         $this->assertDatabaseHas('status_histories', ['entity_id' => $item->id, 'from_status' => null, 'to_status' => 'PENDING_ANALYSIS']);
     }
 
     public function test_pm_records_adjustment_as_recorded(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->post($this->url(), $this->valid(['isFormalCr' => '0']));
 
@@ -115,7 +115,7 @@ class ChangeRequestPagesTest extends TestCase
 
     public function test_tw_cannot_record(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get($this->url('/create'))->assertForbidden();
         $this->post($this->url(), $this->valid())->assertForbidden();
@@ -123,7 +123,7 @@ class ChangeRequestPagesTest extends TestCase
 
     public function test_empty_fields_are_rejected(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->from($this->url('/create'))
             ->post($this->url(), ['momId' => '', 'changeDescription' => '', 'source' => '', 'changeType' => '', 'isFormalCr' => ''])
@@ -133,9 +133,9 @@ class ChangeRequestPagesTest extends TestCase
 
     public function test_non_final_mom_is_rejected(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
-        $this->post($this->url(), $this->valid(['momId' => '22222222-2222-4222-8222-000000000099']))
+        $this->post($this->url(), $this->valid(['momId' => '019a0000-2222-7222-8222-000000000099']))
             ->assertSessionHasErrors('momId');
     }
 
@@ -143,25 +143,25 @@ class ChangeRequestPagesTest extends TestCase
 
     public function test_tl_sees_analysis_form_and_saves_it(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
 
         $this->get('/change-requests/'.self::PENDING)->assertOk()->assertSee('Simpan Analisis');
 
         $this->patch('/change-requests/'.self::PENDING.'/analysis', [
             'impact' => 'Tambah 3 hari pada modul autentikasi',
-            'baselineItemId' => 'BSL-014-01',
-            'affectedTaskIds' => ['TSK-014-001'],
+            'baselineItemId' => '019a0000-e301-7000-8000-000000014001',
+            'affectedTaskIds' => ['019a0000-e401-7000-8000-000000014001'],
         ])->assertRedirect('/change-requests/'.self::PENDING);
 
         $item = ChangeRequest::with('affectedTasks')->findOrFail(self::PENDING);
         $this->assertSame('ANALYZED', $item->status->value);
-        $this->assertSame(['TSK-014-001'], $item->affectedTasks->pluck('task_id')->all());
+        $this->assertSame(['019a0000-e401-7000-8000-000000014001'], $item->affectedTasks->pluck('task_id')->all());
         $this->assertDatabaseHas('status_histories', ['entity_id' => self::PENDING, 'from_status' => 'PENDING_ANALYSIS', 'to_status' => 'ANALYZED']);
     }
 
     public function test_scope_cr_without_baseline_is_rejected(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
 
         $this->patch('/change-requests/'.self::PENDING.'/analysis', ['impact' => 'Tambah 3 hari'])
             ->assertSessionHasErrors('baselineItemId');
@@ -171,10 +171,10 @@ class ChangeRequestPagesTest extends TestCase
 
     public function test_pm_cannot_analyze(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->get('/change-requests/'.self::PENDING)->assertOk()->assertDontSee('Simpan Analisis');
-        $this->patch('/change-requests/'.self::PENDING.'/analysis', ['impact' => 'x', 'baselineItemId' => 'BSL-014-01'])
+        $this->patch('/change-requests/'.self::PENDING.'/analysis', ['impact' => 'x', 'baselineItemId' => '019a0000-e301-7000-8000-000000014001'])
             ->assertForbidden();
     }
 
@@ -183,7 +183,7 @@ class ChangeRequestPagesTest extends TestCase
     public function test_pm_approves_analyzed_cr(): void
     {
         $this->analyzed()->save();
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->get('/change-requests/'.self::PENDING)->assertOk()->assertSee('Simpan Keputusan');
 
@@ -192,14 +192,14 @@ class ChangeRequestPagesTest extends TestCase
 
         $item = ChangeRequest::findOrFail(self::PENDING);
         $this->assertSame('APPROVED', $item->status->value);
-        $this->assertSame('acc-pm-0007', $item->decided_by);
+        $this->assertSame('019a0000-f101-7000-8000-000000000007', $item->decided_by);
         $this->assertTrue(StatusHistory::where('entity_id', self::PENDING)->where('to_status', 'APPROVED')->exists());
     }
 
     public function test_decision_needs_a_reason(): void
     {
         $this->analyzed()->save();
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
 
         $this->patch('/change-requests/'.self::PENDING.'/decision', ['decision' => 'REJECTED', 'decisionNote' => ''])
             ->assertSessionHasErrors('decisionNote');
@@ -208,7 +208,7 @@ class ChangeRequestPagesTest extends TestCase
     public function test_tw_cannot_decide(): void
     {
         $this->analyzed()->save();
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get('/change-requests/'.self::PENDING)->assertOk()->assertDontSee('Simpan Keputusan');
         $this->patch('/change-requests/'.self::PENDING.'/decision', ['decision' => 'APPROVED', 'decisionNote' => 'ok'])
@@ -217,7 +217,7 @@ class ChangeRequestPagesTest extends TestCase
 
     public function test_recorded_adjustment_cannot_be_decided(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->patch('/change-requests/'.self::RECORDED.'/decision', ['decision' => 'APPROVED', 'decisionNote' => 'ok'])
             ->assertStatus(409);

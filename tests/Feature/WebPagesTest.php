@@ -48,22 +48,22 @@ class WebPagesTest extends TestCase
 
     public function test_sidebar_menus_use_last_opened_project_on_projects_page(): void
     {
-        $this->post('/dev-login', ['accountId' => 'acc-pm-0007']);
+        $this->post('/dev-login', ['accountId' => '019a0000-f101-7000-8000-000000000007']);
 
-        $this->get('/projects/PRJ-2026-016/meetings')->assertOk();
+        $this->get('/projects/019a0000-d101-7000-8000-000000000016/meetings')->assertOk();
 
         $this->get('/projects')->assertOk()
-            ->assertSee('href="/projects/PRJ-2026-016/risk-issues"', false)
+            ->assertSee('href="/projects/019a0000-d101-7000-8000-000000000016/risk-issues"', false)
             ->assertSee('Change Request');
 
         $this->get('/action-items')->assertOk()
-            ->assertSee('href="/projects/PRJ-2026-016/risk-issues"', false)
+            ->assertSee('href="/projects/019a0000-d101-7000-8000-000000000016/risk-issues"', false)
             ->assertSee('href="/action-items"', false);
     }
 
     public function test_project_menus_are_hidden_until_a_project_is_chosen(): void
     {
-        $this->post('/dev-login', ['accountId' => 'acc-pm-0007']);
+        $this->post('/dev-login', ['accountId' => '019a0000-f101-7000-8000-000000000007']);
 
         $this->get('/projects')->assertOk()
             ->assertSee('Action Items')
@@ -84,23 +84,23 @@ class WebPagesTest extends TestCase
 
             public function activeForAccount(string $accountId): array
             {
-                return [new Project('PRJ-2026-014', 'Proyek Tunggal', true, ['acc-tw-0091'])];
+                return [new Project('019a0000-d101-7000-8000-000000000014', 'Proyek Tunggal', true, ['019a0000-f101-7000-8000-000000000091'])];
             }
         });
 
-        $this->post('/dev-login', ['accountId' => 'acc-tw-0091']);
+        $this->post('/dev-login', ['accountId' => '019a0000-f101-7000-8000-000000000091']);
 
         $this->get('/projects')->assertOk()
-            ->assertSee('href="/projects/PRJ-2026-014/risk-issues"', false);
+            ->assertSee('href="/projects/019a0000-d101-7000-8000-000000000014/risk-issues"', false);
     }
 
     public function test_session_project_of_another_account_is_ignored(): void
     {
-        $this->post('/dev-login', ['accountId' => 'acc-tw-0092']);
+        $this->post('/dev-login', ['accountId' => '019a0000-f101-7000-8000-000000000092']);
 
-        $this->withSession(['currentProjectId' => 'PRJ-2026-014'])
+        $this->withSession(['currentProjectId' => '019a0000-d101-7000-8000-000000000014'])
             ->get('/projects')->assertOk()
-            ->assertDontSee('PRJ-2026-014')
+            ->assertDontSee('019a0000-d101-7000-8000-000000000014')
             ->assertDontSee('Proyek Contoh Sistem Informasi')
             ->assertSessionMissing('currentProjectId');
     }

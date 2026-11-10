@@ -32,13 +32,13 @@ use Illuminate\Support\Carbon;
  */
 class FreshStartSeeder extends Seeder
 {
-    private const PROJECT = 'PRJ-2026-014';
+    private const PROJECT = '019a0000-d101-7000-8000-000000000014';
 
-    private const PM = 'acc-pm-0007';
+    private const PM = '019a0000-f101-7000-8000-000000000007';
 
-    private const TL = 'acc-tl-0042';
+    private const TL = '019a0000-f101-7000-8000-000000000042';
 
-    private const TW = 'acc-tw-0091';
+    private const TW = '019a0000-f101-7000-8000-000000000091';
 
     public function run(): void
     {
@@ -46,17 +46,17 @@ class FreshStartSeeder extends Seeder
         $at = fn (int $days, int $hourWib = 9) => $today->copy()->addDays($days)->setTime($hourWib, 0)->utc();
 
         // 1. PM: upcoming meetings to mark DONE or CANCELLED
-        $this->meeting('a1111111-1111-4111-8111-000000000001', self::PROJECT, 'Weekly Meeting Minggu 3', $at(2), MeetingStatus::SCHEDULED, $at(-1));
-        $this->meeting('a1111111-1111-4111-8111-000000000002', self::PROJECT, 'Demo Prototipe ke Klien', $at(6, 13), MeetingStatus::SCHEDULED, $at(-1));
-        $this->meeting('a1111111-1111-4111-8111-000000000005', 'PRJ-2026-016', 'Weekly Meeting Minggu 1', $at(3), MeetingStatus::SCHEDULED, $at(-1));
+        $this->meeting('019a0001-1111-7111-8111-000000000001', self::PROJECT, 'Weekly Meeting Minggu 3', $at(2), MeetingStatus::SCHEDULED, $at(-1));
+        $this->meeting('019a0001-1111-7111-8111-000000000002', self::PROJECT, 'Demo Prototipe ke Klien', $at(6, 13), MeetingStatus::SCHEDULED, $at(-1));
+        $this->meeting('019a0001-1111-7111-8111-000000000005', '019a0000-d101-7000-8000-000000000016', 'Weekly Meeting Minggu 1', $at(3), MeetingStatus::SCHEDULED, $at(-1));
 
         // 2. TW: finished meeting with no MoM yet
-        $this->meeting('a1111111-1111-4111-8111-000000000003', self::PROJECT, 'Weekly Meeting Minggu 2', $at(-1), MeetingStatus::DONE, $at(-6));
+        $this->meeting('019a0001-1111-7111-8111-000000000003', self::PROJECT, 'Weekly Meeting Minggu 2', $at(-1), MeetingStatus::DONE, $at(-6));
 
         // 3. Kickoff with a FINAL MoM: source for action items, CRs and risks
-        $kickoff = $this->meeting('a1111111-1111-4111-8111-000000000004', self::PROJECT, 'Kickoff Proyek', $at(-7), MeetingStatus::DONE, $at(-12), attended: true);
+        $kickoff = $this->meeting('019a0001-1111-7111-8111-000000000004', self::PROJECT, 'Kickoff Proyek', $at(-7), MeetingStatus::DONE, $at(-12), attended: true);
 
-        $mom = Mom::updateOrCreate(['id' => 'a2222222-2222-4222-8222-000000000004'], [
+        $mom = Mom::updateOrCreate(['id' => '019a0001-2222-7222-8222-000000000004'], [
             'meeting_id' => $kickoff->id,
             'meeting_date' => $today->copy()->subDays(7)->toDateString(),
             'discussion' => 'Penyampaian ruang lingkup ERP tahap 1, pembagian peran tim, dan jadwal rapat mingguan.',
@@ -74,9 +74,9 @@ class FreshStartSeeder extends Seeder
 
         // 4. Every PIC has one TODO action item due in the future
         $items = [
-            ['a3333333-3333-4333-8333-000000000001', 'Kirim jadwal rapat mingguan ke seluruh peserta', self::PM, 5],
-            ['a3333333-3333-4333-8333-000000000002', 'Siapkan lingkungan server uji', self::TL, 7],
-            ['a3333333-3333-4333-8333-000000000003', 'Susun dokumen kebutuhan modul autentikasi', self::TW, 10],
+            ['019a0001-3333-7333-8333-000000000001', 'Kirim jadwal rapat mingguan ke seluruh peserta', self::PM, 5],
+            ['019a0001-3333-7333-8333-000000000002', 'Siapkan lingkungan server uji', self::TL, 7],
+            ['019a0001-3333-7333-8333-000000000003', 'Susun dokumen kebutuhan modul autentikasi', self::TW, 10],
         ];
 
         foreach ($items as [$id, $description, $pic, $dueInDays]) {
@@ -91,7 +91,7 @@ class FreshStartSeeder extends Seeder
         }
 
         // 5. One formal CR waiting for the TL's analysis
-        $cr = ChangeRequest::updateOrCreate(['id' => 'a6666666-6666-4666-8666-000000000001'], [
+        $cr = ChangeRequest::updateOrCreate(['id' => '019a0001-6666-7666-8666-000000000001'], [
             'project_id' => self::PROJECT,
             'mom_id' => $mom->id,
             'change_description' => 'Tambah fitur ekspor laporan ke Excel',
@@ -113,8 +113,8 @@ class FreshStartSeeder extends Seeder
 
         // 6. Open risk (PIC TL, so the TL can update it) and open issue (PIC PM)
         $risks = [
-            ['a5555555-5555-4555-8555-000000000001', RiskIssueType::RISK, 'Data uji dari klien bisa terlambat', 'Klien belum mengirim contoh data, pengujian modul laporan bisa mundur.', ImpactLevel::MEDIUM, self::TL],
-            ['a5555555-5555-4555-8555-000000000002', RiskIssueType::ISSUE, 'Akses VPN klien belum diberikan', 'Tim belum bisa mengakses server klien untuk instalasi awal.', ImpactLevel::HIGH, self::PM],
+            ['019a0001-5555-7555-8555-000000000001', RiskIssueType::RISK, 'Data uji dari klien bisa terlambat', 'Klien belum mengirim contoh data, pengujian modul laporan bisa mundur.', ImpactLevel::MEDIUM, self::TL],
+            ['019a0001-5555-7555-8555-000000000002', RiskIssueType::ISSUE, 'Akses VPN klien belum diberikan', 'Tim belum bisa mengakses server klien untuk instalasi awal.', ImpactLevel::HIGH, self::PM],
         ];
 
         foreach ($risks as [$id, $type, $title, $description, $impact, $pic]) {
@@ -152,7 +152,7 @@ class FreshStartSeeder extends Seeder
         $participants = [[self::PM, null], [self::TL, null], [self::TW, null], [null, 'Perwakilan Klien']];
 
         foreach ($participants as $i => [$accountId, $clientName]) {
-            MeetingParticipant::updateOrCreate(['id' => 'a4444444-4444-4444-8444-'.substr($id, -6).sprintf('%06d', $i + 1)], [
+            MeetingParticipant::updateOrCreate(['id' => '019a0001-4444-7444-8444-'.substr($id, -6).sprintf('%06d', $i + 1)], [
                 'meeting_id' => $meeting->id,
                 'participant_type' => $accountId ? ParticipantType::INTERNAL : ParticipantType::CLIENT,
                 'account_id' => $accountId,
