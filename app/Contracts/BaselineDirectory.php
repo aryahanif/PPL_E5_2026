@@ -10,6 +10,9 @@ interface BaselineDirectory
 {
     public function find(string $baselineItemId): ?BaselineItem;
 
+    /** @return list<BaselineItem> baseline items of the project (choices for a CR analysis) */
+    public function forProject(string $projectId): array;
+
     /** Cumulative target progress (0-100) on $date, or null if the project has no target yet. */
     public function targetProgress(string $projectId, CarbonInterface $date): ?float;
 }
