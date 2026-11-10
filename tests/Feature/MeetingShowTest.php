@@ -12,9 +12,9 @@ class MeetingShowTest extends TestCase
 
     protected $seed = true;
 
-    private const DONE_WITH_MOM = '11111111-1111-4111-8111-000000000003';
+    private const DONE_WITH_MOM = '019a0000-1111-7111-8111-000000000003';
 
-    private function show(string $id, string $account = 'acc-tw-0091')
+    private function show(string $id, string $account = '019a0000-f101-7000-8000-000000000091')
     {
         return $this->withToken("mock-{$account}")->getJson("/api/v1/meetings/{$id}");
     }
@@ -28,7 +28,7 @@ class MeetingShowTest extends TestCase
                 'momId', 'momStatus', 'createdAt', 'updatedAt',
             ])
             ->assertJsonPath('meetingId', self::DONE_WITH_MOM)
-            ->assertJsonPath('momId', '22222222-2222-4222-8222-000000000003')
+            ->assertJsonPath('momId', '019a0000-2222-7222-8222-000000000003')
             ->assertJsonPath('momStatus', 'FINAL');
     }
 
@@ -39,12 +39,12 @@ class MeetingShowTest extends TestCase
 
     public function test_non_member_is_403(): void
     {
-        $this->show(self::DONE_WITH_MOM, 'acc-tw-0092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
+        $this->show(self::DONE_WITH_MOM, '019a0000-f101-7000-8000-000000000092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
     }
 
     public function test_unknown_meeting_is_404(): void
     {
-        $this->show('11111111-1111-4111-8111-999999999999')->assertStatus(404)
+        $this->show('019a0000-1111-7111-8111-999999999999')->assertStatus(404)
             ->assertJsonPath('code', 'MEETING_NOT_FOUND');
     }
 }

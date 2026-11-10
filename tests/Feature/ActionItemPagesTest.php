@@ -16,15 +16,15 @@ class ActionItemPagesTest extends TestCase
 
     protected $seed = true;
 
-    private const PROJECT = 'PRJ-2026-014';
+    private const PROJECT = '019a0000-d101-7000-8000-000000000014';
 
-    private const EMPTY_PROJECT = 'PRJ-2026-016';
+    private const EMPTY_PROJECT = '019a0000-d101-7000-8000-000000000016';
 
-    private const TL_ITEM = '33333333-3333-4333-8333-000000000001';
+    private const TL_ITEM = '019a0000-3333-7333-8333-000000000001';
 
-    private const TW_ITEM = '33333333-3333-4333-8333-000000000002';
+    private const TW_ITEM = '019a0000-3333-7333-8333-000000000002';
 
-    private const PM_ITEM = '33333333-3333-4333-8333-000000000003';
+    private const PM_ITEM = '019a0000-3333-7333-8333-000000000003';
 
     private function login(string $accountId): void
     {
@@ -40,17 +40,17 @@ class ActionItemPagesTest extends TestCase
     private function draftItem(): ActionItem
     {
         $mom = Mom::create([
-            'meeting_id' => '11111111-1111-4111-8111-000000000002',
+            'meeting_id' => '019a0000-1111-7111-8111-000000000002',
             'meeting_date' => now()->subDays(2)->toDateString(),
             'discussion' => 'Bahas',
             'decision' => 'Lanjut',
             'status' => MomStatus::DRAFT,
-            'written_by' => 'acc-tw-0091',
+            'written_by' => '019a0000-f101-7000-8000-000000000091',
         ]);
 
         return $mom->actionItems()->create([
             'description' => 'Item dari MoM draft',
-            'pic_account_id' => 'acc-tw-0091',
+            'pic_account_id' => '019a0000-f101-7000-8000-000000000091',
             'due_date' => now()->addDays(3)->toDateString(),
             'status' => 'TODO',
         ]);
@@ -60,7 +60,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_tw_sees_only_own_items_and_no_all_tab(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get($this->url())->assertOk()
             ->assertSee('Milik saya')
@@ -72,7 +72,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_tw_cannot_widen_the_list_with_tab_all(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get($this->url('all'))->assertOk()
             ->assertSee('Perbarui dokumen kebutuhan modul login')
@@ -82,7 +82,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_pm_mine_tab_shows_only_own_and_all_tab_shows_everything(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->get($this->url())->assertOk()
             ->assertSee(['Milik saya', 'Semua di proyek'])
@@ -95,7 +95,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_tl_sees_all_tab_and_kpis(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
 
         $this->get($this->url('all'))->assertOk()
             ->assertSee('Semua di proyek')
@@ -106,7 +106,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_overdue_badge_is_separate_and_only_for_late_items(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
 
         $html = $this->get($this->url('all'))->assertOk()->assertSee('IN_PROGRESS')->getContent();
 
@@ -116,7 +116,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_done_item_is_not_flagged_overdue(): void
     {
-        $this->login('acc-pm-0007'); // PM's own item is DONE and past due
+        $this->login('019a0000-f101-7000-8000-000000000007'); // PM's own item is DONE and past due
 
         $this->get($this->url())->assertOk()->assertSee('Konfirmasi jadwal demo')->assertDontSee('OVERDUE');
     }
@@ -124,29 +124,29 @@ class ActionItemPagesTest extends TestCase
     public function test_items_of_non_final_mom_are_hidden(): void
     {
         $this->draftItem();
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get($this->url())->assertOk()->assertDontSee('Item dari MoM draft');
     }
 
     public function test_empty_project_shows_empty_state(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->get('/projects/'.self::EMPTY_PROJECT.'/action-items')->assertOk()->assertSee('Belum ada action item');
     }
 
     public function test_non_member_and_unknown_project_are_rejected(): void
     {
-        $this->login('acc-tw-0092');
+        $this->login('019a0000-f101-7000-8000-000000000092');
 
         $this->get($this->url())->assertForbidden();
-        $this->get('/projects/PRJ-0000-000/action-items')->assertNotFound();
+        $this->get('/projects/019a0000-d101-7000-8000-000000000000/action-items')->assertNotFound();
     }
 
     public function test_sidebar_links_to_action_items(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->get($this->url())->assertOk()->assertSee('href="/projects/'.self::PROJECT.'/action-items"', false);
     }
@@ -155,7 +155,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_pic_sees_status_form_only_on_own_items(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->get($this->url('all'))->assertOk()
             ->assertDontSee('/action-items/'.self::TL_ITEM.'/status', false)
@@ -166,7 +166,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_done_item_has_no_status_control_only_history_link(): void
     {
-        $this->login('acc-pm-0007'); // PIC of the DONE item
+        $this->login('019a0000-f101-7000-8000-000000000007'); // PIC of the DONE item
 
         $this->get($this->url())->assertOk()
             ->assertDontSee('/action-items/'.self::PM_ITEM.'/status', false)
@@ -175,7 +175,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_source_mom_shows_meeting_title_and_date_not_a_code(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $item = ActionItem::with('mom.meeting')->findOrFail(self::TW_ITEM);
 
@@ -190,7 +190,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_cross_project_list_shows_project_column_and_filters(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->get('/action-items?tab=all')->assertOk()
             ->assertSee(['Semua proyek', 'Proyek Contoh Sistem Informasi', 'Siapkan server uji baru', 'Konfirmasi jadwal demo ke klien'])
@@ -208,7 +208,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_kpis_count_the_active_tab_only(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
 
         $this->get('/action-items')->assertOk()
             ->assertViewHas('total', 1)
@@ -219,7 +219,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_tw_cross_project_list_has_no_all_tab_and_only_own_items(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get('/action-items?tab=all')->assertOk()
             ->assertDontSee('Semua di proyek')
@@ -229,15 +229,15 @@ class ActionItemPagesTest extends TestCase
 
     public function test_cross_project_filter_rejects_other_projects(): void
     {
-        $this->login('acc-tw-0092');
+        $this->login('019a0000-f101-7000-8000-000000000092');
 
         $this->get('/action-items?project='.self::PROJECT)->assertForbidden();
-        $this->get('/action-items?project=PRJ-0000-000')->assertNotFound();
+        $this->get('/action-items?project=019a0000-d101-7000-8000-000000000000')->assertNotFound();
     }
 
     public function test_sidebar_links_to_cross_project_list_outside_a_project(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get('/projects')->assertOk()->assertSee('href="/action-items"', false);
     }
@@ -246,7 +246,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_pm_sees_history_of_any_item(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->get('/action-items/'.self::TW_ITEM)->assertOk()
             ->assertSee(['Riwayat Status', 'Perbarui dokumen kebutuhan modul login', 'Weekly Meeting Minggu 2', 'Hanya PIC yang dapat mengubah status'])
@@ -255,7 +255,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_pic_can_move_status_forward_from_history_page(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
 
         $this->get('/action-items/'.self::TL_ITEM)->assertOk()->assertSee('Ubah ke IN_PROGRESS');
 
@@ -268,7 +268,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_tw_cannot_see_history_of_others_items(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get('/action-items/'.self::TW_ITEM)->assertOk();
         $this->get('/action-items/'.self::TL_ITEM)->assertForbidden();
@@ -277,21 +277,21 @@ class ActionItemPagesTest extends TestCase
     public function test_history_rejects_non_member_draft_mom_and_unknown_item(): void
     {
         $item = $this->draftItem();
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
         $this->get("/action-items/{$item->id}")->assertStatus(409);
-        $this->get('/action-items/33333333-3333-4333-8333-999999999999')->assertNotFound();
+        $this->get('/action-items/019a0000-3333-7333-8333-999999999999')->assertNotFound();
     }
 
     public function test_non_member_cannot_see_history(): void
     {
-        $this->login('acc-tw-0092');
+        $this->login('019a0000-f101-7000-8000-000000000092');
 
         $this->get('/action-items/'.self::TW_ITEM)->assertForbidden();
     }
 
     public function test_tw_pic_sees_form_for_own_item(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->get($this->url())->assertOk()
             ->assertSee('/action-items/'.self::TW_ITEM.'/status', false)
@@ -300,7 +300,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_pic_moves_overdue_item_forward_and_history_is_written(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->patch('/action-items/'.self::TW_ITEM.'/status', ['status' => 'DONE'])->assertRedirect();
 
@@ -311,12 +311,12 @@ class ActionItemPagesTest extends TestCase
         $row = StatusHistory::where('entity_id', self::TW_ITEM)->sole();
         $this->assertSame('IN_PROGRESS', $row->from_status);
         $this->assertSame('DONE', $row->to_status);
-        $this->assertSame('acc-tw-0091', $row->changed_by);
+        $this->assertSame('019a0000-f101-7000-8000-000000000091', $row->changed_by);
     }
 
     public function test_pic_starts_todo_item_and_sees_toast(): void
     {
-        $this->login('acc-tl-0042'); // TL is PIC of the TODO item
+        $this->login('019a0000-f101-7000-8000-000000000042'); // TL is PIC of the TODO item
 
         $this->from($this->url('all'))->patch('/action-items/'.self::TL_ITEM.'/status', ['status' => 'IN_PROGRESS'])
             ->assertRedirect($this->url('all'));
@@ -327,7 +327,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_skipping_a_step_is_409(): void
     {
-        $this->login('acc-tl-0042');
+        $this->login('019a0000-f101-7000-8000-000000000042');
 
         $this->patch('/action-items/'.self::TL_ITEM.'/status', ['status' => 'DONE'])->assertStatus(409);
         $this->assertSame('TODO', ActionItem::find(self::TL_ITEM)->status->value);
@@ -335,7 +335,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_going_backwards_is_409(): void
     {
-        $this->login('acc-pm-0007'); // PIC of the DONE item
+        $this->login('019a0000-f101-7000-8000-000000000007'); // PIC of the DONE item
 
         $this->patch('/action-items/'.self::PM_ITEM.'/status', ['status' => 'IN_PROGRESS'])->assertStatus(409);
         $this->assertSame('DONE', ActionItem::find(self::PM_ITEM)->status->value);
@@ -343,7 +343,7 @@ class ActionItemPagesTest extends TestCase
 
     public function test_non_pic_status_change_is_rejected(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->patch('/action-items/'.self::TL_ITEM.'/status', ['status' => 'IN_PROGRESS'])->assertForbidden();
         $this->assertSame('TODO', ActionItem::find(self::TL_ITEM)->status->value);
@@ -351,14 +351,14 @@ class ActionItemPagesTest extends TestCase
 
     public function test_pm_cannot_change_status_of_item_they_do_not_own(): void
     {
-        $this->login('acc-pm-0007');
+        $this->login('019a0000-f101-7000-8000-000000000007');
 
         $this->patch('/action-items/'.self::TW_ITEM.'/status', ['status' => 'DONE'])->assertForbidden();
     }
 
     public function test_unknown_or_empty_status_is_rejected_and_item_keeps_status(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->from($this->url())->patch('/action-items/'.self::TW_ITEM.'/status', ['status' => 'SELESAI'])
             ->assertRedirect($this->url())
@@ -372,22 +372,22 @@ class ActionItemPagesTest extends TestCase
     public function test_item_of_non_final_mom_cannot_change_status(): void
     {
         $item = $this->draftItem();
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
         $this->patch("/action-items/{$item->id}/status", ['status' => 'IN_PROGRESS'])->assertStatus(409);
     }
 
     public function test_non_member_cannot_change_status(): void
     {
-        $this->login('acc-tw-0092');
+        $this->login('019a0000-f101-7000-8000-000000000092');
 
         $this->patch('/action-items/'.self::TW_ITEM.'/status', ['status' => 'DONE'])->assertForbidden();
     }
 
     public function test_unknown_item_is_404(): void
     {
-        $this->login('acc-tw-0091');
+        $this->login('019a0000-f101-7000-8000-000000000091');
 
-        $this->patch('/action-items/33333333-3333-4333-8333-999999999999/status', ['status' => 'DONE'])->assertNotFound();
+        $this->patch('/action-items/019a0000-3333-7333-8333-999999999999/status', ['status' => 'DONE'])->assertNotFound();
     }
 }

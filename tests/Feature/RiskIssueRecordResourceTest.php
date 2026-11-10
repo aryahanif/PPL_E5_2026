@@ -10,7 +10,7 @@ use Tests\TestCase;
 /** API-K05-09 RiskIssueRecord serialization; no database access is needed. */
 class RiskIssueRecordResourceTest extends TestCase
 {
-    private const RISK_ISSUE = '55555555-5555-4555-8555-000000000001';
+    private const RISK_ISSUE = '019a0000-5555-7555-8555-000000000001';
 
     public function test_returns_exactly_the_contract_fields_and_enum_values(): void
     {
@@ -21,7 +21,7 @@ class RiskIssueRecordResourceTest extends TestCase
             'description' => 'Pengujian tertunda karena server uji tidak tersedia.',
             'impactLevel' => 'HIGH',
             'status' => 'CLOSED',
-            'picAccountId' => 'acc-tl-0042',
+            'picAccountId' => '019a0000-f101-7000-8000-000000000042',
             'createdAt' => '2026-09-08T09:00:00Z',
             'closedAt' => '2026-09-10T07:00:00Z',
             'resolutionNote' => 'Pengujian dipindahkan ke server cadangan.',
@@ -47,7 +47,7 @@ class RiskIssueRecordResourceTest extends TestCase
             'description' => 'Pengujian tertunda karena server uji tidak tersedia.',
             'impactLevel' => null,
             'status' => 'OPEN',
-            'picAccountId' => 'acc-tl-0042',
+            'picAccountId' => '019a0000-f101-7000-8000-000000000042',
             'createdAt' => '2026-09-08T09:00:00Z',
             'closedAt' => null,
             'resolutionNote' => null,
@@ -73,16 +73,16 @@ class RiskIssueRecordResourceTest extends TestCase
         // Raw attributes exercise the model's enum/date casts without saving a row.
         $item = (new RiskIssue)->setRawAttributes(array_replace([
             'id' => self::RISK_ISSUE,
-            'project_id' => 'PRJ-2026-014',
+            'project_id' => '019a0000-d101-7000-8000-000000000014',
             'type' => 'ISSUE',
             'title' => 'Server uji tidak dapat diakses',
             'description' => 'Pengujian tertunda karena server uji tidak tersedia.',
             'impact_level' => 'HIGH',
             'mitigation' => 'Gunakan server cadangan.',
             'status' => 'CLOSED',
-            'pic_account_id' => 'acc-tl-0042',
-            'source_mom_id' => '22222222-2222-4222-8222-000000000003',
-            'reported_by' => 'acc-pm-0007',
+            'pic_account_id' => '019a0000-f101-7000-8000-000000000042',
+            'source_mom_id' => '019a0000-2222-7222-8222-000000000003',
+            'reported_by' => '019a0000-f101-7000-8000-000000000007',
             'created_at' => '2026-09-08 09:00:00',
             'updated_at' => '2026-09-10 07:00:00',
             'closed_at' => '2026-09-10 07:00:00',

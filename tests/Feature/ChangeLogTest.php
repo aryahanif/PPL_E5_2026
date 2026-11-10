@@ -13,32 +13,32 @@ class ChangeLogTest extends TestCase
 
     protected $seed = true;
 
-    private const URL = '/api/v1/projects/PRJ-2026-014/change-log';
+    private const URL = '/api/v1/projects/019a0000-d101-7000-8000-000000000014/change-log';
 
-    private const RECORDED = '66666666-6666-4666-8666-000000000001';
+    private const RECORDED = '019a0000-6666-7666-8666-000000000001';
 
-    private const PENDING = '66666666-6666-4666-8666-000000000002';
+    private const PENDING = '019a0000-6666-7666-8666-000000000002';
 
-    private function fetch(string $url = self::URL, string $account = 'acc-pm-0007')
+    private function fetch(string $url = self::URL, string $account = '019a0000-f101-7000-8000-000000000007')
     {
         return $this->withToken("mock-{$account}")->getJson($url);
     }
 
     public function test_member_sees_all_entries_newest_first_with_links(): void
     {
-        ChangeRequest::whereKey(self::PENDING)->update(['created_at' => now()->addMinute(), 'baseline_item_id' => 'BSL-014-01']);
+        ChangeRequest::whereKey(self::PENDING)->update(['created_at' => now()->addMinute(), 'baseline_item_id' => '019a0000-e301-7000-8000-000000014001']);
         ChangeRequestTask::create([
-            'change_request_id' => self::PENDING, 'task_id' => 'TSK-014-001',
-            'added_by' => 'acc-tl-0042', 'created_at' => now(),
+            'change_request_id' => self::PENDING, 'task_id' => '019a0000-e401-7000-8000-000000014001',
+            'added_by' => '019a0000-f101-7000-8000-000000000042', 'created_at' => now(),
         ]);
 
-        $response = $this->fetch(account: 'acc-tw-0091')->assertOk()->assertJsonCount(2);
+        $response = $this->fetch(account: '019a0000-f101-7000-8000-000000000091')->assertOk()->assertJsonCount(2);
 
         $response->assertJsonPath('0.changeRequestId', self::PENDING)
             ->assertJsonPath('0.status', 'PENDING_ANALYSIS')
-            ->assertJsonPath('0.momId', '22222222-2222-4222-8222-000000000003')
-            ->assertJsonPath('0.baselineItemId', 'BSL-014-01')
-            ->assertJsonPath('0.affectedTaskIds', ['TSK-014-001'])
+            ->assertJsonPath('0.momId', '019a0000-2222-7222-8222-000000000003')
+            ->assertJsonPath('0.baselineItemId', '019a0000-e301-7000-8000-000000014001')
+            ->assertJsonPath('0.affectedTaskIds', ['019a0000-e401-7000-8000-000000014001'])
             ->assertJsonPath('1.changeRequestId', self::RECORDED)
             ->assertJsonPath('1.status', 'RECORDED')
             ->assertJsonPath('1.affectedTaskIds', []);
@@ -63,7 +63,7 @@ class ChangeLogTest extends TestCase
 
     public function test_non_member_is_403(): void
     {
-        $this->fetch(account: 'acc-tw-0092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
+        $this->fetch(account: '019a0000-f101-7000-8000-000000000092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
     }
 
     public function test_unknown_project_is_404(): void

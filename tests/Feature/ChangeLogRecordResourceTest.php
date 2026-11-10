@@ -12,11 +12,11 @@ use Tests\TestCase;
 /** API-K05-09 ChangeLogRecord serialization; no database rows are needed. */
 class ChangeLogRecordResourceTest extends TestCase
 {
-    private const CHANGE_REQUEST = '66666666-6666-4666-8666-000000000001';
+    private const CHANGE_REQUEST = '019a0000-6666-7666-8666-000000000001';
 
-    private const SECOND = '66666666-6666-4666-8666-000000000002';
+    private const SECOND = '019a0000-6666-7666-8666-000000000002';
 
-    private const THIRD = '66666666-6666-4666-8666-000000000003';
+    private const THIRD = '019a0000-6666-7666-8666-000000000003';
 
     public function test_returns_exactly_the_contract_fields_and_enum_values(): void
     {
@@ -31,8 +31,8 @@ class ChangeLogRecordResourceTest extends TestCase
             'decisionNote' => 'Disetujui, masuk sprint berikut',
             'createdAt' => '2026-09-15T05:00:00Z',
             'decidedAt' => '2026-09-17T04:00:00Z',
-            'baselineItemId' => 'BSL-014-03',
-            'affectedTaskIds' => ['TSK-014-027', 'TSK-014-028'],
+            'baselineItemId' => '019a0000-e301-7000-8000-000000014003',
+            'affectedTaskIds' => ['019a0000-e401-7000-8000-000000014027', '019a0000-e401-7000-8000-000000014028'],
         ])->assertJsonCount(12);
 
         foreach (['data', 'createdBy', 'analyzedBy', 'decidedBy', 'created_by', 'analyzed_by', 'decided_by', 'projectId', 'momId', 'updatedAt'] as $field) {
@@ -97,8 +97,8 @@ class ChangeLogRecordResourceTest extends TestCase
 
     public function test_affected_task_ids_are_a_json_array_even_when_relation_keys_are_not_sequential(): void
     {
-        $this->record([], [5 => 'TSK-014-027', 9 => 'TSK-014-028'])->assertOk()
-            ->assertJsonPath('affectedTaskIds', ['TSK-014-027', 'TSK-014-028']);
+        $this->record([], [5 => '019a0000-e401-7000-8000-000000014027', 9 => '019a0000-e401-7000-8000-000000014028'])->assertOk()
+            ->assertJsonPath('affectedTaskIds', ['019a0000-e401-7000-8000-000000014027', '019a0000-e401-7000-8000-000000014028']);
     }
 
     public function test_unloaded_tasks_return_an_empty_array_without_lazy_loading(): void
@@ -126,7 +126,7 @@ class ChangeLogRecordResourceTest extends TestCase
                 'decided_at' => null,
                 'baseline_item_id' => null,
             ], []),
-            $this->item(['id' => self::THIRD, 'status' => 'REJECTED'], ['TSK-014-029']),
+            $this->item(['id' => self::THIRD, 'status' => 'REJECTED'], ['019a0000-e401-7000-8000-000000014029']),
         ]);
         $this->expectsDatabaseQueryCount(0);
 
@@ -134,9 +134,9 @@ class ChangeLogRecordResourceTest extends TestCase
             ->assertOk()
             ->assertJsonCount(3)
             ->assertJsonMissingPath('data')
-            ->assertJsonPath('0.affectedTaskIds', ['TSK-014-027', 'TSK-014-028'])
+            ->assertJsonPath('0.affectedTaskIds', ['019a0000-e401-7000-8000-000000014027', '019a0000-e401-7000-8000-000000014028'])
             ->assertJsonPath('1.affectedTaskIds', [])
-            ->assertJsonPath('2.affectedTaskIds', ['TSK-014-029']);
+            ->assertJsonPath('2.affectedTaskIds', ['019a0000-e401-7000-8000-000000014029']);
         $this->assertSame([self::CHANGE_REQUEST, self::SECOND, self::THIRD], $response->json('*.changeRequestId'));
 
         foreach ([0, 1, 2] as $index) {
@@ -153,30 +153,30 @@ class ChangeLogRecordResourceTest extends TestCase
             ->assertOk()->assertExactJson([]);
     }
 
-    private function record(array $attributes = [], array $taskIds = ['TSK-014-027', 'TSK-014-028']): TestResponse
+    private function record(array $attributes = [], array $taskIds = ['019a0000-e401-7000-8000-000000014027', '019a0000-e401-7000-8000-000000014028']): TestResponse
     {
         return TestResponse::fromBaseResponse((new ChangeLogRecordResource($this->item($attributes, $taskIds)))->response());
     }
 
-    private function item(array $attributes = [], array $taskIds = ['TSK-014-027', 'TSK-014-028']): ChangeRequest
+    private function item(array $attributes = [], array $taskIds = ['019a0000-e401-7000-8000-000000014027', '019a0000-e401-7000-8000-000000014028']): ChangeRequest
     {
         // Raw attributes exercise the model's enum, boolean, and date casts without saving rows.
         $item = (new ChangeRequest)->setRawAttributes(array_replace([
             'id' => self::CHANGE_REQUEST,
-            'project_id' => 'PRJ-2026-014',
-            'mom_id' => '22222222-2222-4222-8222-000000000003',
+            'project_id' => '019a0000-d101-7000-8000-000000000014',
+            'mom_id' => '019a0000-2222-7222-8222-000000000003',
             'change_description' => 'Tambah fitur export Excel',
             'source' => 'USER',
             'change_type' => 'SCOPE',
             'is_formal_cr' => 1,
-            'baseline_item_id' => 'BSL-014-03',
+            'baseline_item_id' => '019a0000-e301-7000-8000-000000014003',
             'impact' => 'Tambah 2 hari, 1 tugas baru',
-            'analyzed_by' => 'acc-tl-0042',
+            'analyzed_by' => '019a0000-f101-7000-8000-000000000042',
             'status' => 'APPROVED',
             'decision_note' => 'Disetujui, masuk sprint berikut',
-            'decided_by' => 'acc-pm-0007',
+            'decided_by' => '019a0000-f101-7000-8000-000000000007',
             'decided_at' => '2026-09-17 04:00:00',
-            'created_by' => 'acc-tw-0091',
+            'created_by' => '019a0000-f101-7000-8000-000000000091',
             'created_at' => '2026-09-15 05:00:00',
             'updated_at' => '2026-09-17 04:00:00',
         ], $attributes));
@@ -187,7 +187,7 @@ class ChangeLogRecordResourceTest extends TestCase
                 'change_request_id' => $item->id,
                 'task_id' => $taskId,
                 'impact_note' => 'Perbarui format laporan.',
-                'added_by' => 'acc-tl-0042',
+                'added_by' => '019a0000-f101-7000-8000-000000000042',
                 'created_at' => '2026-09-16 03:00:00',
             ]));
         }

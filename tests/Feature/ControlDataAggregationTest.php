@@ -26,28 +26,28 @@ class ControlDataAggregationTest extends TestCase
 
     protected $seed = true;
 
-    private const PROJECT = 'PRJ-2026-016';
+    private const PROJECT = '019a0000-d101-7000-8000-000000000016';
 
-    private const MEETING = '11111111-1111-4111-8111-000000000201';
+    private const MEETING = '019a0000-1111-7111-8111-000000000201';
 
-    private const MOM = '22222222-2222-4222-8222-000000000201';
+    private const MOM = '019a0000-2222-7222-8222-000000000201';
 
     // September 2026 in WIB, expressed as inclusive UTC boundaries.
     private const START = '2026-08-31 17:00:00';
 
     private const END = '2026-09-30 16:59:59';
 
-    private const RISK_FIRST = '55555555-5555-4555-8555-000000000201';
+    private const RISK_FIRST = '019a0000-5555-7555-8555-000000000201';
 
-    private const RISK_SECOND = '55555555-5555-4555-8555-000000000202';
+    private const RISK_SECOND = '019a0000-5555-7555-8555-000000000202';
 
-    private const RISK_THIRD = '55555555-5555-4555-8555-000000000203';
+    private const RISK_THIRD = '019a0000-5555-7555-8555-000000000203';
 
-    private const CHANGE_FIRST = '66666666-6666-4666-8666-000000000201';
+    private const CHANGE_FIRST = '019a0000-6666-7666-8666-000000000201';
 
-    private const CHANGE_SECOND = '66666666-6666-4666-8666-000000000202';
+    private const CHANGE_SECOND = '019a0000-6666-7666-8666-000000000202';
 
-    private const CHANGE_THIRD = '66666666-6666-4666-8666-000000000203';
+    private const CHANGE_THIRD = '019a0000-6666-7666-8666-000000000203';
 
     protected function setUp(): void
     {
@@ -59,7 +59,7 @@ class ControlDataAggregationTest extends TestCase
             'title' => 'Rapat pengendalian proyek',
             'scheduled_at' => '2026-08-20 02:00:00',
             'status' => MeetingStatus::DONE,
-            'created_by' => 'acc-pm-0007',
+            'created_by' => '019a0000-f101-7000-8000-000000000007',
             'created_at' => '2026-08-01 09:00:00',
             'updated_at' => '2026-08-20 02:00:00',
         ]);
@@ -71,8 +71,8 @@ class ControlDataAggregationTest extends TestCase
             'discussion' => 'Risiko dan perubahan kebutuhan modul laporan.',
             'decision' => 'Catat risiko dan perubahan untuk ditindaklanjuti.',
             'status' => MomStatus::FINAL,
-            'written_by' => 'acc-tw-0091',
-            'reviewed_by' => 'acc-tl-0042',
+            'written_by' => '019a0000-f101-7000-8000-000000000091',
+            'reviewed_by' => '019a0000-f101-7000-8000-000000000042',
             'finalized_at' => '2026-08-20 03:00:00',
             'created_at' => '2026-08-20 02:00:00',
             'updated_at' => '2026-08-20 03:00:00',
@@ -99,17 +99,17 @@ class ControlDataAggregationTest extends TestCase
     {
         $this->riskIssue(self::RISK_FIRST);
         $this->riskIssue(self::RISK_SECOND, updatedAt: '2026-10-10 09:00:00');
-        $this->riskIssue(self::RISK_THIRD, attributes: ['project_id' => 'PRJ-2026-014']);
+        $this->riskIssue(self::RISK_THIRD, attributes: ['project_id' => '019a0000-d101-7000-8000-000000000014']);
         $this->changeRequest(self::CHANGE_FIRST);
         $this->changeRequest(self::CHANGE_SECOND, '2026-10-10 09:00:00');
         $this->changeRequest(self::CHANGE_THIRD, attributes: [
-            'project_id' => 'PRJ-2026-014',
-            'mom_id' => '22222222-2222-4222-8222-000000000003',
+            'project_id' => '019a0000-d101-7000-8000-000000000014',
+            'mom_id' => '019a0000-2222-7222-8222-000000000003',
         ]);
 
         $september = $this->controlData();
         $october = $this->controlData(startUtc: '2026-09-30 17:00:00', endUtc: '2026-10-31 16:59:59');
-        $otherProject = $this->controlData('PRJ-2026-015');
+        $otherProject = $this->controlData('019a0000-d101-7000-8000-000000000015');
 
         $this->assertSame([self::RISK_FIRST], $september['riskIssues']->modelKeys());
         $this->assertSame([self::CHANGE_FIRST], $september['changeLog']->modelKeys());
@@ -168,8 +168,8 @@ class ControlDataAggregationTest extends TestCase
         $change = $this->changeRequest(self::CHANGE_FIRST);
         $this->changeRequest(self::CHANGE_SECOND, '2026-09-11 09:00:00');
         $change->affectedTasks()->create([
-            'task_id' => 'TSK-016-001',
-            'added_by' => 'acc-tl-0042',
+            'task_id' => '019a0000-e401-7000-8000-000000016001',
+            'added_by' => '019a0000-f101-7000-8000-000000000042',
             'created_at' => '2026-09-10 09:00:00',
         ]);
         // One query per collection, plus one eager-loading query for all affected tasks.
@@ -182,7 +182,7 @@ class ControlDataAggregationTest extends TestCase
         foreach ($result['changeLog'] as $record) {
             $this->assertTrue($record->relationLoaded('affectedTasks'));
         }
-        $this->assertSame(['TSK-016-001'], $result['changeLog'][0]->affectedTasks->pluck('task_id')->all());
+        $this->assertSame(['019a0000-e401-7000-8000-000000016001'], $result['changeLog'][0]->affectedTasks->pluck('task_id')->all());
         $this->assertSame([], $result['changeLog'][1]->affectedTasks->modelKeys());
     }
 
@@ -204,8 +204,8 @@ class ControlDataAggregationTest extends TestCase
             'title' => 'Keterlambatan data uji',
             'description' => 'Data uji fiktif terlambat diterima.',
             'status' => RiskIssueStatus::CLOSED,
-            'pic_account_id' => 'acc-tl-0042',
-            'reported_by' => 'acc-pm-0007',
+            'pic_account_id' => '019a0000-f101-7000-8000-000000000042',
+            'reported_by' => '019a0000-f101-7000-8000-000000000007',
             'closed_at' => $updatedAt,
             'resolution_note' => 'Data uji cadangan telah disiapkan.',
             'created_at' => $createdAt,
@@ -224,7 +224,7 @@ class ControlDataAggregationTest extends TestCase
             'change_type' => ChangeType::TASK,
             'is_formal_cr' => false,
             'status' => ChangeRequestStatus::RECORDED,
-            'created_by' => 'acc-pm-0007',
+            'created_by' => '019a0000-f101-7000-8000-000000000007',
             'created_at' => $createdAt,
             'updated_at' => $createdAt,
         ], $attributes));

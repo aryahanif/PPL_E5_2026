@@ -13,11 +13,11 @@ class ChangeRequestAnalysisTest extends TestCase
 
     protected $seed = true;
 
-    private const RECORDED = '66666666-6666-4666-8666-000000000001';
+    private const RECORDED = '019a0000-6666-7666-8666-000000000001';
 
-    private const PENDING = '66666666-6666-4666-8666-000000000002';
+    private const PENDING = '019a0000-6666-7666-8666-000000000002';
 
-    private function patchAnalysis(string $id, array $body, string $account = 'acc-tl-0042')
+    private function patchAnalysis(string $id, array $body, string $account = '019a0000-f101-7000-8000-000000000042')
     {
         return $this->withToken("mock-{$account}")->patchJson("/api/v1/change-requests/{$id}/analysis", $body);
     }
@@ -26,14 +26,14 @@ class ChangeRequestAnalysisTest extends TestCase
     {
         $response = $this->patchAnalysis(self::PENDING, [
             'impact' => 'Dampak rendah terhadap jadwal',
-            'baselineItemId' => 'BSL-014-01',
-            'affectedTaskIds' => ['TSK-014-001', 'TSK-014-002'],
+            'baselineItemId' => '019a0000-e301-7000-8000-000000014001',
+            'affectedTaskIds' => ['019a0000-e401-7000-8000-000000014001', '019a0000-e401-7000-8000-000000014002'],
         ])->assertOk()
             ->assertJsonPath('status', 'ANALYZED')
             ->assertJsonPath('impact', 'Dampak rendah terhadap jadwal')
-            ->assertJsonPath('baselineItemId', 'BSL-014-01')
-            ->assertJsonPath('analyzedBy', 'acc-tl-0042')
-            ->assertJsonPath('affectedTaskIds', ['TSK-014-001', 'TSK-014-002']);
+            ->assertJsonPath('baselineItemId', '019a0000-e301-7000-8000-000000014001')
+            ->assertJsonPath('analyzedBy', '019a0000-f101-7000-8000-000000000042')
+            ->assertJsonPath('affectedTaskIds', ['019a0000-e401-7000-8000-000000014001', '019a0000-e401-7000-8000-000000014002']);
 
         $this->assertSame('ANALYZED', StatusHistory::where('entity_type', ChangeRequest::HISTORY_TYPE)
             ->where('entity_id', self::PENDING)->latest('changed_at')->first()->to_status);
@@ -51,28 +51,28 @@ class ChangeRequestAnalysisTest extends TestCase
     {
         $this->patchAnalysis(self::PENDING, [
             'impact' => 'Dampak',
-            'baselineItemId' => 'BSL-016-01',
+            'baselineItemId' => '019a0000-e301-7000-8000-000000016001',
             'affectedTaskIds' => [],
         ])->assertStatus(400)->assertJsonPath('code', 'VALIDATION_ERROR');
 
         $this->patchAnalysis(self::PENDING, [
             'impact' => 'Dampak',
-            'baselineItemId' => 'BSL-014-01',
-            'affectedTaskIds' => ['TSK-016-001'],
+            'baselineItemId' => '019a0000-e301-7000-8000-000000014001',
+            'affectedTaskIds' => ['019a0000-e401-7000-8000-000000016001'],
         ])->assertStatus(400)->assertJsonPath('code', 'VALIDATION_ERROR');
     }
 
     public function test_impact_is_required_and_task_ids_must_be_unique(): void
     {
         $this->patchAnalysis(self::PENDING, [
-            'baselineItemId' => 'BSL-014-01',
+            'baselineItemId' => '019a0000-e301-7000-8000-000000014001',
             'affectedTaskIds' => [],
         ])->assertStatus(400)->assertJsonPath('code', 'VALIDATION_ERROR');
 
         $this->patchAnalysis(self::PENDING, [
             'impact' => 'Dampak',
-            'baselineItemId' => 'BSL-014-01',
-            'affectedTaskIds' => ['TSK-014-001', 'TSK-014-001'],
+            'baselineItemId' => '019a0000-e301-7000-8000-000000014001',
+            'affectedTaskIds' => ['019a0000-e401-7000-8000-000000014001', '019a0000-e401-7000-8000-000000014001'],
         ])->assertStatus(400)->assertJsonPath('code', 'VALIDATION_ERROR');
     }
 
@@ -80,7 +80,7 @@ class ChangeRequestAnalysisTest extends TestCase
     {
         $this->patchAnalysis(self::RECORDED, [
             'impact' => 'Dampak',
-            'baselineItemId' => 'BSL-014-01',
+            'baselineItemId' => '019a0000-e301-7000-8000-000000014001',
             'affectedTaskIds' => [],
         ])->assertStatus(409)->assertJsonPath('code', 'INVALID_STATUS_TRANSITION');
     }
@@ -88,21 +88,21 @@ class ChangeRequestAnalysisTest extends TestCase
     public function test_without_token_is_401(): void
     {
         $this->patchJson('/api/v1/change-requests/'.self::PENDING.'/analysis', [
-            'impact' => 'Dampak', 'baselineItemId' => 'BSL-014-01', 'affectedTaskIds' => [],
+            'impact' => 'Dampak', 'baselineItemId' => '019a0000-e301-7000-8000-000000014001', 'affectedTaskIds' => [],
         ])->assertStatus(401)->assertJsonPath('code', 'UNAUTHORIZED');
     }
 
     public function test_pm_tw_and_non_member_are_403(): void
     {
-        $body = ['impact' => 'Dampak', 'baselineItemId' => 'BSL-014-01', 'affectedTaskIds' => []];
-        $this->patchAnalysis(self::PENDING, $body, 'acc-pm-0007')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
-        $this->patchAnalysis(self::PENDING, $body, 'acc-tw-0091')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
-        $this->patchAnalysis(self::PENDING, $body, 'acc-tw-0092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
+        $body = ['impact' => 'Dampak', 'baselineItemId' => '019a0000-e301-7000-8000-000000014001', 'affectedTaskIds' => []];
+        $this->patchAnalysis(self::PENDING, $body, '019a0000-f101-7000-8000-000000000007')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
+        $this->patchAnalysis(self::PENDING, $body, '019a0000-f101-7000-8000-000000000091')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
+        $this->patchAnalysis(self::PENDING, $body, '019a0000-f101-7000-8000-000000000092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
     }
 
     public function test_unknown_change_request_is_404(): void
     {
-        $this->patchAnalysis('66666666-6666-4666-8666-999999999999', [
+        $this->patchAnalysis('019a0000-6666-7666-8666-999999999999', [
             'impact' => 'Dampak', 'affectedTaskIds' => [],
         ])->assertStatus(404)->assertJsonPath('code', 'CHANGE_REQUEST_NOT_FOUND');
     }

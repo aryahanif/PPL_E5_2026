@@ -13,11 +13,11 @@ class MeetingStatusTest extends TestCase
 
     protected $seed = true;
 
-    private const SCHEDULED = '11111111-1111-4111-8111-000000000001';
+    private const SCHEDULED = '019a0000-1111-7111-8111-000000000001';
 
-    private const DONE = '11111111-1111-4111-8111-000000000002';
+    private const DONE = '019a0000-1111-7111-8111-000000000002';
 
-    private function changeStatus(string $id, string $status = 'DONE', string $account = 'acc-pm-0007')
+    private function changeStatus(string $id, string $status = 'DONE', string $account = '019a0000-f101-7000-8000-000000000007')
     {
         return $this->withToken("mock-{$account}")->patchJson("/api/v1/meetings/{$id}/status", ['status' => $status]);
     }
@@ -32,7 +32,7 @@ class MeetingStatusTest extends TestCase
         $this->assertSame('MEETING', $row->entity_type);
         $this->assertSame('SCHEDULED', $row->from_status);
         $this->assertSame('DONE', $row->to_status);
-        $this->assertSame('acc-pm-0007', $row->changed_by);
+        $this->assertSame('019a0000-f101-7000-8000-000000000007', $row->changed_by);
     }
 
     public function test_pm_cancels_scheduled_meeting(): void
@@ -54,23 +54,23 @@ class MeetingStatusTest extends TestCase
 
     public function test_tl_is_403(): void
     {
-        $this->changeStatus(self::SCHEDULED, 'DONE', 'acc-tl-0042')->assertStatus(403)
+        $this->changeStatus(self::SCHEDULED, 'DONE', '019a0000-f101-7000-8000-000000000042')->assertStatus(403)
             ->assertExactJson(['code' => 'FORBIDDEN', 'message' => 'Hanya PM yang dapat mengubah status rapat']);
     }
 
     public function test_tw_is_403(): void
     {
-        $this->changeStatus(self::SCHEDULED, 'DONE', 'acc-tw-0091')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
+        $this->changeStatus(self::SCHEDULED, 'DONE', '019a0000-f101-7000-8000-000000000091')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
     }
 
     public function test_non_member_is_403(): void
     {
-        $this->changeStatus(self::SCHEDULED, 'DONE', 'acc-tw-0092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
+        $this->changeStatus(self::SCHEDULED, 'DONE', '019a0000-f101-7000-8000-000000000092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
     }
 
     public function test_unknown_meeting_is_404(): void
     {
-        $this->changeStatus('11111111-1111-4111-8111-999999999999')->assertStatus(404)
+        $this->changeStatus('019a0000-1111-7111-8111-999999999999')->assertStatus(404)
             ->assertJsonPath('code', 'MEETING_NOT_FOUND');
     }
 
