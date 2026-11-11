@@ -34,15 +34,23 @@ Buka http://localhost:8000/dev-login dan pilih akun mock.
 
 Akun F-1 dan proyek D-1 **tidak** disimpan di database. Keduanya dibaca dari
 `database/mocks/*.json` selama `INTEGRATION_MODE=mock` (lihat `config/e5.php`).
-Data baseline E-3 dan tugas E-4 juga dibaca dari sana, dan proyek PRJ-2026-016
-menghasilkan indikator DELAYED sedangkan PRJ-2026-014 ON_TRACK.
+Data baseline E-3 dan tugas E-4 juga dibaca dari sana.
 
-| Akun | Peran | Proyek |
+Semua ID fixture adalah UUID v7 tetap. Grup kedua menandai pemiliknya: `f101` akun F-1,
+`d101` proyek D-1, `e301` baseline E-3, `e401` tugas E-4, dan `1111` sampai `6666` data E-5.
+
+| Proyek | Nama | Keterangan |
 |---|---|---|
-| `acc-pm-0007` | PM | PRJ-2026-014, PRJ-2026-016, PRJ-2026-015 (nonaktif) |
-| `acc-tl-0042` | TL | PRJ-2026-014, PRJ-2026-016 |
-| `acc-tw-0091` | TW | PRJ-2026-014, PRJ-2026-016 |
-| `acc-tw-0092` | TW | PRJ-2026-015 (nonaktif) |
+| `019a0000-d101-7000-8000-000000000014` | Proyek Contoh Sistem Informasi | Aktif, indikator ON_TRACK |
+| `019a0000-d101-7000-8000-000000000015` | Proyek Contoh Nonaktif | Nonaktif |
+| `019a0000-d101-7000-8000-000000000016` | Proyek Contoh Terlambat | Aktif, indikator DELAYED |
+
+| Akun | Peran | Proyek (akhiran ID) |
+|---|---|---|
+| `019a0000-f101-7000-8000-000000000007` | PM | …014, …016, …015 (nonaktif) |
+| `019a0000-f101-7000-8000-000000000042` | TL | …014, …016 |
+| `019a0000-f101-7000-8000-000000000091` | TW | …014, …016 |
+| `019a0000-f101-7000-8000-000000000092` | TW | …015 (nonaktif) |
 
 ## Memanggil API
 
@@ -50,10 +58,10 @@ Gunakan Postman, dengan `php artisan serve` berjalan:
 
 1. **Import** → `openapi.yaml` → *Postman Collection*. Semua endpoint dibuat, dengan
    `baseUrl` = `http://localhost:8000/api/v1`.
-2. Collection → **Authorization** → *Bearer Token* → `mock-acc-pm-0007`. Sampai F-1
+2. Collection → **Authorization** → *Bearer Token* → `mock-019a0000-f101-7000-8000-000000000007`. Sampai F-1
    merilis skema tokennya, token berbentuk `mock-<accountId>`. Ganti untuk bertindak
    sebagai akun lain dari tabel di atas.
-3. Kirim mis. *GET /me* atau *GET /projects/{projectId}/meetings* dengan `projectId` = `PRJ-2026-014`.
+3. Kirim mis. *GET /me* atau *GET /projects/{projectId}/meetings* dengan `projectId` = `019a0000-d101-7000-8000-000000000014`.
 
 Import ulang setelah `openapi.yaml` berubah. Endpoint user story yang belum dibuat
 mengembalikan `404 NOT_FOUND` sampai diimplementasikan.
@@ -68,15 +76,15 @@ Masih **stub**: respons mengikuti `openapi.yaml`, tetapi isinya data contoh teta
 (`examples/success.json`); hanya `projectId` dan periode yang mengikuti request. Validasi
 periode, 401, 403, dan 404 sudah berjalan nyata. Data asli menyusul di slice 4 (BL-13).
 
-Token sementara: `Bearer mock-acc-pm-0007` (token layanan D-3 dari F-1 belum ada).
+Token sementara: `Bearer mock-019a0000-f101-7000-8000-000000000007` (token layanan D-3 dari F-1 belum ada).
 
 | Kasus | Request | Hasil |
 |---|---|---|
-| Berhasil | `PRJ-2026-014`, `periodStart=2026-09-01&periodEnd=2026-09-30` | 200 |
+| Berhasil | `019a0000-d101-7000-8000-000000000014`, `periodStart=2026-09-01&periodEnd=2026-09-30` | 200 |
 | Periode terbalik | `periodStart=2026-09-30&periodEnd=2026-09-01` | 400 `INVALID_PERIOD` |
 | Tanpa token | tanpa header `Authorization` | 401 |
-| Bukan anggota | token `mock-acc-tw-0092` ke `PRJ-2026-014` | 403 |
-| Proyek tidak ada | `PRJ-2026-999` | 404 `PROJECT_NOT_FOUND` |
+| Bukan anggota | token `mock-019a0000-f101-7000-8000-000000000092` ke `019a0000-d101-7000-8000-000000000014` | 403 |
+| Proyek tidak ada | `019a0000-d101-7000-8000-000000000999` | 404 `PROJECT_NOT_FOUND` |
 
 Tanpa menjalankan Laravel: `npx @stoplight/prism-cli mock openapi.yaml -p 4010`, lalu
 panggil `http://localhost:4010/api/v1/...`.

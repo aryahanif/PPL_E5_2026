@@ -273,7 +273,7 @@ In Laravel: each adapter is a PHP interface (`app/Contracts/IdentityProvider.php
 
 Mock data for other groups' records (accounts, projects) lives in JSON fixtures such as `database/mocks/f1_accounts.json` and `database/mocks/d1_projects.json`, **not** in E-5's database tables. E-5's database only holds E-5's own entities (§7), so switching to the real APIs later doesn't require a migration.
 
-Mock authentication: a middleware reads `Authorization: Bearer mock-<accountId>` (e.g. `Bearer mock-acc-pm-0007`), looks the account up through `IdentityProvider`, and attaches it to the request. The dev-login page (screen 1) does the same through the session. No secrets in the repo; `.env.example` holds placeholders.
+Mock authentication: a middleware reads `Authorization: Bearer mock-<accountId>` (e.g. `Bearer mock-019a0000-f101-7000-8000-000000000007`), looks the account up through `IdentityProvider`, and attaches it to the request. The dev-login page (screen 1) does the same through the session. No secrets in the repo; `.env.example` holds placeholders.
 
 ---
 
@@ -281,8 +281,8 @@ Mock authentication: a middleware reads `Authorization: Bearer mock-<accountId>`
 
 | Kind | Values |
 |---|---|
-| Mock F-1 accounts (fixture) | `acc-pm-0007` (PM), `acc-tl-0042` (TL), `acc-tw-0091` (TW), `acc-tw-0092` (TW, not in PRJ-2026-014 — for access-denied tests) |
-| Mock D-1 projects (fixture) | `PRJ-2026-014` active, members PM/TL/TW above; `PRJ-2026-016` active, same members, DELAYED indicator (E-3/E-4 mocks; `PRJ-2026-014` is ON_TRACK); `PRJ-2026-015` inactive (for rejection tests) |
+| Mock F-1 accounts (fixture) | `019a0000-f101-7000-8000-000000000007` (PM), `019a0000-f101-7000-8000-000000000042` (TL), `019a0000-f101-7000-8000-000000000091` (TW), `019a0000-f101-7000-8000-000000000092` (TW, not in `019a0000-d101-7000-8000-000000000014` — for access-denied tests) |
+| Mock D-1 projects (fixture) | `019a0000-d101-7000-8000-000000000014` active, members PM/TL/TW above; `019a0000-d101-7000-8000-000000000016` active, same members, DELAYED indicator (E-3/E-4 mocks; `019a0000-d101-7000-8000-000000000014` is ON_TRACK); `019a0000-d101-7000-8000-000000000015` inactive (for rejection tests) |
 | Meetings | One SCHEDULED, one DONE without MoM, one DONE with a FINAL MoM |
 | Action items | On the FINAL MoM: one TODO due in the future, one IN_PROGRESS overdue, one DONE |
 
@@ -325,9 +325,9 @@ These come from reading other groups' contracts, not from the mitra. They change
 |---|---|---|---|
 | Baseline link for CRs (E-3) | E-3 API-K-E3-02 (`GET /projects/{projectId}/planning-references`, v0.3.0) returns one `baselineId` (numeric string, e.g. `"301"`) and `baselineVersion` per project: the latest `APPROVED` baseline only. There are no baseline items and no lookup by ID. | Keep `baselineItemId` until E-3 replies. Likely change: store `baselineId` + `baselineVersion` instead (affects API-K05-05 and API-K05-09, so D-3 must be told). | Fabregas (review), Iqbal |
 | Indicator targets (E-3) | E-3's API has no planned-progress or timeline data, so `ON_TRACK`/`DELAYED` cannot be computed from it. | Indicator uses mock targets (INFRA-01). If E-3 will not provide targets, compute from E-4 only, e.g. `DELAYED` when a task is past due and not done (answers Q-10). | Harits |
-| `projectId` format (D-1) | E-3 reports that D-1 (API-K01-07) issues UUID v7. The Skema Data Awal also uses UUID v7. | Contract has no pattern, so no breaking change. Examples, mocks and seed still use `PRJ-2026-014`; switch to UUID v7 once D-1 confirms. | Arya |
+| `projectId` format (D-1) | E-3 reports that D-1 (API-K01-07) issues UUID v7. The Skema Data Awal also uses UUID v7. | Contract has no pattern, so no breaking change. Mocks and seed now use fixed UUID v7 (e.g. `019a0000-d101-7000-8000-000000000014`); D-1 confirmation still open. | Arya |
 | Datetime format | D-1 and E-3 send `+07:00`; E-5 and F-1 send UTC `Z`. | E-5 sends UTC and parses both. Class decision pending. | Class |
-| D-3 service token | F-1 has no service-to-service token yet. | D-3 tests API-K05-09 with a project member token (`mock-acc-pm-0007`). | Surya |
+| D-3 service token | F-1 has no service-to-service token yet. | D-3 tests API-K05-09 with a project member token (`mock-019a0000-f101-7000-8000-000000000007`). | Surya |
 | API-K05-09 data | Still the slice-1 stub: fixed data from `examples/success.json`; period and status filters are not applied. Period validation, 401, 403 and 404 are real. | D-3 reviews the response shape now; real data in slice 4 (BL-13), after API-K05-05/06/07. | Surya |
 
 ---

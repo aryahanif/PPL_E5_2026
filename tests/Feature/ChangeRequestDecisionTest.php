@@ -16,31 +16,31 @@ class ChangeRequestDecisionTest extends TestCase
 
     protected $seed = true;
 
-    private const RECORDED = '66666666-6666-4666-8666-000000000001';
+    private const RECORDED = '019a0000-6666-7666-8666-000000000001';
 
-    private const PENDING = '66666666-6666-4666-8666-000000000002';
+    private const PENDING = '019a0000-6666-7666-8666-000000000002';
 
-    private const ANALYZED = '66666666-6666-4666-8666-000000000003';
+    private const ANALYZED = '019a0000-6666-7666-8666-000000000003';
 
     private function makeAnalyzed(ChangeRequestStatus $status = ChangeRequestStatus::ANALYZED): void
     {
         ChangeRequest::forceCreate([
             'id' => self::ANALYZED,
-            'project_id' => 'PRJ-2026-014',
-            'mom_id' => '22222222-2222-4222-8222-000000000003',
+            'project_id' => '019a0000-d101-7000-8000-000000000014',
+            'mom_id' => '019a0000-2222-7222-8222-000000000003',
             'change_description' => 'Penambahan validasi login',
             'source' => ChangeSource::USER,
             'change_type' => ChangeType::SCOPE,
             'is_formal_cr' => true,
-            'baseline_item_id' => 'BSL-014-01',
+            'baseline_item_id' => '019a0000-e301-7000-8000-000000014001',
             'impact' => 'Dampak rendah',
-            'analyzed_by' => 'acc-tl-0042',
+            'analyzed_by' => '019a0000-f101-7000-8000-000000000042',
             'status' => $status,
-            'created_by' => 'acc-pm-0007',
+            'created_by' => '019a0000-f101-7000-8000-000000000007',
         ]);
     }
 
-    private function decide(string $id, array $body, string $account = 'acc-pm-0007')
+    private function decide(string $id, array $body, string $account = '019a0000-f101-7000-8000-000000000007')
     {
         return $this->withToken("mock-{$account}")->patchJson("/api/v1/change-requests/{$id}/decision", $body);
     }
@@ -54,7 +54,7 @@ class ChangeRequestDecisionTest extends TestCase
             ->assertJsonPath('changeRequestId', self::ANALYZED)
             ->assertJsonPath('status', 'APPROVED')
             ->assertJsonPath('decisionNote', 'Disetujui')
-            ->assertJsonPath('decidedBy', 'acc-pm-0007')
+            ->assertJsonPath('decidedBy', '019a0000-f101-7000-8000-000000000007')
             ->assertJsonPath('affectedTaskIds', []);
 
         $changeRequest = ChangeRequest::find(self::ANALYZED);
@@ -65,17 +65,17 @@ class ChangeRequestDecisionTest extends TestCase
         $this->assertSame('ANALYZED', $history->from_status);
         $this->assertSame('APPROVED', $history->to_status);
         $this->assertSame('Disetujui', $history->note);
-        $this->assertSame('acc-pm-0007', $history->changed_by);
+        $this->assertSame('019a0000-f101-7000-8000-000000000007', $history->changed_by);
     }
 
     public function test_tl_rejects_analyzed_cr(): void
     {
         $this->makeAnalyzed();
 
-        $this->decide(self::ANALYZED, ['decision' => 'REJECTED', 'decisionNote' => 'Di luar anggaran'], 'acc-tl-0042')
+        $this->decide(self::ANALYZED, ['decision' => 'REJECTED', 'decisionNote' => 'Di luar anggaran'], '019a0000-f101-7000-8000-000000000042')
             ->assertOk()
             ->assertJsonPath('status', 'REJECTED')
-            ->assertJsonPath('decidedBy', 'acc-tl-0042');
+            ->assertJsonPath('decidedBy', '019a0000-f101-7000-8000-000000000042');
     }
 
     public function test_missing_note_or_bad_decision_is_400(): void
@@ -103,17 +103,17 @@ class ChangeRequestDecisionTest extends TestCase
         $this->makeAnalyzed();
         $body = ['decision' => 'APPROVED', 'decisionNote' => 'x'];
 
-        $this->decide(self::ANALYZED, $body, 'acc-tw-0091')->assertStatus(403)->assertExactJson([
+        $this->decide(self::ANALYZED, $body, '019a0000-f101-7000-8000-000000000091')->assertStatus(403)->assertExactJson([
             'code' => 'FORBIDDEN',
             'message' => 'Hanya PM atau TL yang dapat memutuskan change request',
         ]);
-        $this->decide(self::ANALYZED, $body, 'acc-tw-0092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
+        $this->decide(self::ANALYZED, $body, '019a0000-f101-7000-8000-000000000092')->assertStatus(403)->assertJsonPath('code', 'FORBIDDEN');
         $this->assertSame('ANALYZED', ChangeRequest::find(self::ANALYZED)->status->value);
     }
 
     public function test_unknown_change_request_is_404(): void
     {
-        $this->decide('66666666-6666-4666-8666-999999999999', ['decision' => 'APPROVED', 'decisionNote' => 'x'])
+        $this->decide('019a0000-6666-7666-8666-999999999999', ['decision' => 'APPROVED', 'decisionNote' => 'x'])
             ->assertStatus(404)->assertJsonPath('code', 'CHANGE_REQUEST_NOT_FOUND');
     }
 

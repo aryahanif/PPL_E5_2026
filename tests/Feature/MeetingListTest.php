@@ -12,7 +12,7 @@ class MeetingListTest extends TestCase
 
     protected $seed = true;
 
-    private function list(string $projectId = 'PRJ-2026-014', string $account = 'acc-pm-0007', string $query = '')
+    private function list(string $projectId = '019a0000-d101-7000-8000-000000000014', string $account = '019a0000-f101-7000-8000-000000000007', string $query = '')
     {
         return $this->withToken("mock-{$account}")->getJson("/api/v1/projects/{$projectId}/meetings{$query}");
     }
@@ -33,7 +33,7 @@ class MeetingListTest extends TestCase
         );
 
         // Meeting 3 has a FINAL MoM; internal names come from F-1, clients keep their stored name.
-        $response->assertJsonPath('2.momId', '22222222-2222-4222-8222-000000000003')
+        $response->assertJsonPath('2.momId', '019a0000-2222-7222-8222-000000000003')
             ->assertJsonPath('2.momStatus', 'FINAL')
             ->assertJsonPath('0.momId', null);
 
@@ -61,7 +61,7 @@ class MeetingListTest extends TestCase
 
     public function test_missing_or_unknown_token_is_401(): void
     {
-        $this->getJson('/api/v1/projects/PRJ-2026-014/meetings')->assertStatus(401)
+        $this->getJson('/api/v1/projects/019a0000-d101-7000-8000-000000000014/meetings')->assertStatus(401)
             ->assertJsonPath('code', 'UNAUTHORIZED');
 
         $this->list(account: 'acc-unknown')->assertStatus(401)->assertJsonPath('code', 'UNAUTHORIZED');
@@ -69,13 +69,13 @@ class MeetingListTest extends TestCase
 
     public function test_non_member_is_403(): void
     {
-        $this->list(account: 'acc-tw-0092')->assertStatus(403)
+        $this->list(account: '019a0000-f101-7000-8000-000000000092')->assertStatus(403)
             ->assertExactJson(['code' => 'FORBIDDEN', 'message' => 'Anda bukan anggota proyek ini']);
     }
 
     public function test_unknown_project_is_404(): void
     {
-        $this->list('PRJ-2026-999')->assertStatus(404)
-            ->assertExactJson(['code' => 'PROJECT_NOT_FOUND', 'message' => 'Proyek PRJ-2026-999 tidak ditemukan']);
+        $this->list('019a0000-d101-7000-8000-000000000999')->assertStatus(404)
+            ->assertExactJson(['code' => 'PROJECT_NOT_FOUND', 'message' => 'Proyek 019a0000-d101-7000-8000-000000000999 tidak ditemukan']);
     }
 }
